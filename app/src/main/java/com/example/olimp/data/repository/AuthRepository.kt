@@ -37,27 +37,46 @@ class AuthRepository(private val api: ApiService) {
         }
     }
 
-    // Метод для запроса сброса пароля
-    suspend fun requestPasswordReset(email: String): Response<Map<String, String>> {
-        val request = mapOf("email" to email)  // Параметры для запроса сброса пароля
-        return api.requestPasswordReset(request).also { response ->
-            Log.d(TAG, "requestPasswordReset response code: ${response.code()}, body: ${response.body()}, errorBody: ${response.errorBody()?.string()}")
+    // Запрос на сброс пароля (отправка reset-кода)
+    suspend fun requestPasswordReset(email: String): Boolean {
+        return try {
+            val response = api.requestPasswordReset(mapOf("email" to email))
+            if (response.isSuccessful) {
+                Log.d(TAG, "Password reset email sent successfully")
+                true
+            } else {
+                Log.e(TAG, "Error in password reset: ${response.errorBody()?.string()}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception in password reset request: ${e.message}")
+            false
         }
     }
 
-    // Метод для подтверждения сброса пароля
+    // Метод для подтверждения сброса пароля (проверка reset-кода и установка нового пароля)
     suspend fun confirmPasswordReset(email: String, resetCode: String, newPassword: String): Response<Map<String, String>> {
-        val request = mapOf("email" to email, "reset_code" to resetCode, "new_password" to newPassword)  // Параметры для подтверждения сброса пароля
+        val request = mapOf("email" to email, "reset_code" to resetCode, "new_password" to newPassword)
         return api.confirmPasswordReset(request).also { response ->
             Log.d(TAG, "confirmPasswordReset response code: ${response.code()}, body: ${response.body()}, errorBody: ${response.errorBody()?.string()}")
         }
     }
 
-    // Метод для подтверждения кода сброса пароля
-    suspend fun verifyResetCode(email: String, resetCode: String): Response<Map<String, String>> {
-        val request: Map<String, String> = mapOf("email" to email, "reset_code" to resetCode)  // Параметры для подтверждения кода сброса
-        return api.verifyResetCode(request).also { response ->
-            Log.d(TAG, "verifyResetCode response code: ${response.code()}, body: ${response.body()}, errorBody: ${response.errorBody()?.string()}")
+    suspend fun isUserExists(email: String): Boolean {
+        return try {
+            val response = api.checkUserExists(email)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body?.exists == true) {
+                    Log.d(TAG, "User exists: ${body.user_id}")
+                    return true
+                }
+            }
+            Log.d(TAG, "User does not exist")
+            false
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking user existence: ${e.message}")
+            false
         }
     }
 }

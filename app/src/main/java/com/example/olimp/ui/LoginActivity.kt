@@ -21,12 +21,13 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var emailEditText: EditText
     private lateinit var passwordEditText: EditText
     private lateinit var loginButton: Button
+    private lateinit var forgotPasswordButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        // Инициализация ApiService с контекстом
+        // Инициализация ApiService и репозитория
         val apiService = RetrofitInstance.createRetrofitInstance(this)
         authRepository = AuthRepository(apiService)
         sessionManager = SessionManager(this)
@@ -34,6 +35,7 @@ class LoginActivity : AppCompatActivity() {
         emailEditText = findViewById(R.id.emailEditText)
         passwordEditText = findViewById(R.id.passwordEditText)
         loginButton = findViewById(R.id.loginButton)
+        forgotPasswordButton = findViewById(R.id.forgotPasswordButton)
 
         loginButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()
@@ -43,25 +45,27 @@ class LoginActivity : AppCompatActivity() {
                 Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
             loginUser(email, password)
+        }
+
+        // Переход на экран сброса пароля (ForgotPasswordActivity)
+        forgotPasswordButton.setOnClickListener {
+            val intent = Intent(this, ForgotPasswordActivity::class.java)
+            startActivity(intent)
         }
     }
 
     private fun loginUser(email: String, password: String) {
         lifecycleScope.launch {
             try {
-                // Вызов метода логина
                 val response = authRepository.loginUser(email, password)
-
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body != null) {
                         // Сохраняем токен и email
                         sessionManager.saveAuthToken(body.token, email)
                         Toast.makeText(this@LoginActivity, "Вход выполнен", Toast.LENGTH_SHORT).show()
-
-                        // Переход в MainActivity после успешного входа
+                        // Переход в MainActivity
                         val intent = Intent(this@LoginActivity, MainActivity::class.java)
                         startActivity(intent)
                         finish()
@@ -72,7 +76,6 @@ class LoginActivity : AppCompatActivity() {
                     val errorBody = response.errorBody()?.string()
                     Toast.makeText(this@LoginActivity, "Ошибка: $errorBody", Toast.LENGTH_SHORT).show()
                 }
-
             } catch (e: Exception) {
                 Toast.makeText(this@LoginActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
             }

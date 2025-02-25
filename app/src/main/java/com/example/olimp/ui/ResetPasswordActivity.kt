@@ -1,5 +1,6 @@
 package com.example.olimp.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -13,45 +14,51 @@ import kotlinx.coroutines.launch
 
 class ResetPasswordActivity : AppCompatActivity() {
 
+    private lateinit var resetCodeEditText: EditText
     private lateinit var newPasswordEditText: EditText
     private lateinit var confirmPasswordEditText: EditText
     private lateinit var resetPasswordButton: Button
-    private var email: String? = null
-    private var resetCode: String? = null
 
+    // Получаем email из Intent
+    private var email: String? = null
+
+    // Репозиторий для сброса пароля
     private lateinit var authRepository: AuthRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reset_password)
 
+        // Получаем email, переданный из ForgotPasswordActivity
         email = intent.getStringExtra("email")
-        resetCode = intent.getStringExtra("reset_code")
 
-        newPasswordEditText = findViewById(R.id.newPasswordEditText)
-        confirmPasswordEditText = findViewById(R.id.confirmPasswordEditText)
-        resetPasswordButton = findViewById(R.id.resetPasswordButton)
+        initViews()
 
-        // Инициализируем репозиторий с API
         authRepository = AuthRepository(RetrofitInstance.createRetrofitInstance(this))
 
         resetPasswordButton.setOnClickListener {
+            val resetCode = resetCodeEditText.text.toString().trim()
             val newPassword = newPasswordEditText.text.toString().trim()
             val confirmPassword = confirmPasswordEditText.text.toString().trim()
 
-            if (newPassword.isEmpty() || confirmPassword.isEmpty()) {
-                Toast.makeText(this, "Введите новый пароль", Toast.LENGTH_SHORT).show()
+            if (resetCode.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
+                showToast("Заполните все поля")
                 return@setOnClickListener
             }
-
             if (newPassword != confirmPassword) {
-                Toast.makeText(this, "Пароли не совпадают", Toast.LENGTH_SHORT).show()
+                showToast("Пароли не совпадают")
                 return@setOnClickListener
             }
 
-            // Вызываем метод для сброса пароля
-            confirmPasswordReset(email ?: "", resetCode ?: "", newPassword)
+            confirmPasswordReset(email.orEmpty(), resetCode, newPassword)
         }
+    }
+
+    private fun initViews() {
+        resetCodeEditText = findViewById(R.id.resetCodeEditText)
+        newPasswordEditText = findViewById(R.id.newPasswordEditText)
+        confirmPasswordEditText = findViewById(R.id.confirmPasswordEditText)
+        resetPasswordButton = findViewById(R.id.resetPasswordButton)
     }
 
     private fun confirmPasswordReset(email: String, resetCode: String, newPassword: String) {
@@ -59,14 +66,20 @@ class ResetPasswordActivity : AppCompatActivity() {
             try {
                 val response = authRepository.confirmPasswordReset(email, resetCode, newPassword)
                 if (response.isSuccessful) {
-                    Toast.makeText(this@ResetPasswordActivity, "Пароль изменен", Toast.LENGTH_SHORT).show()
+                    showToast("Пароль изменён")
+                    startActivity(Intent(this@ResetPasswordActivity, LoginActivity::class.java))
                     finish()
                 } else {
-                    Toast.makeText(this@ResetPasswordActivity, "Ошибка: ${response.errorBody()?.string()}", Toast.LENGTH_SHORT).show()
+                    val errorText = response.errorBody()?.string()
+                    showToast("Ошибка: $errorText")
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@ResetPasswordActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                showToast("Ошибка: ${e.message}")
             }
         }
+    }
+
+    private fun showToast(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 }

@@ -14,6 +14,7 @@ object RetrofitInstance {
 
     private const val BASE_URL = "http://10.0.2.2:8000/"
 
+
     // Инициализация Retrofit с переданным Context для SessionManager
     fun createRetrofitInstance(context: Context): ApiService {
         val sessionManager = SessionManager(context)

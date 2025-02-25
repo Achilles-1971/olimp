@@ -4,14 +4,19 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.example.olimp.R
+import com.example.olimp.data.repository.AuthRepository
+import com.example.olimp.network.ApiService
 import com.example.olimp.utils.SessionManager
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
+    private lateinit var authRepository: AuthRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,36 +25,34 @@ class MainActivity : AppCompatActivity() {
 
         sessionManager = SessionManager(this)
 
-        // Проверяем, авторизован ли пользователь
-        if (!sessionManager.isUserLoggedIn()) {
-            // Если не авторизован, переходим на экран входа
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
-            finish()
-        } else {
-            // Проверяем, существует ли пользователь в базе данных
-            val email = sessionManager.getUserEmail()
-            if (email == null || !isUserValid(email)) {
-                // Если пользователь не существует, очищаем сессию и отправляем на экран входа
-                sessionManager.clearSession() // Исправленный метод
-                val intent = Intent(this, LoginActivity::class.java)
-                startActivity(intent)
-                finish()
-            }
-        }
+        val retrofit = Retrofit.Builder()
+            .baseUrl("http://10.0.2.2:8000/")  // Заменить на реальный URL
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
 
-        // Обработка оконных отступов
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        val apiService = retrofit.create(ApiService::class.java)
+        authRepository = AuthRepository(apiService)
+
+        lifecycleScope.launch {
+            if (!sessionManager.isUserLoggedIn()) {
+                redirectToLogin()
+            } else {
+                val email = sessionManager.getUserEmail()
+                if (email == null || !isUserValid(email)) {
+                    sessionManager.clearSession()
+                    redirectToLogin()
+                }
+            }
         }
     }
 
-    // Функция для проверки валидности пользователя в базе данных
-    private fun isUserValid(email: String): Boolean {
-        // Здесь добавь логику проверки пользователя в базе данных
-        // Например, запрос к API, чтобы убедиться, что пользователь существует
-        return true // Возвращаем true, если пользователь существует
+    private suspend fun isUserValid(email: String): Boolean {
+        return authRepository.isUserExists(email)
+    }
+
+    private fun redirectToLogin() {
+        val intent = Intent(this, LoginActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 }
