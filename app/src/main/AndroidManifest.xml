@@ -4,7 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.olimp">
 
+    <!-- Разрешение на интернет -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Разрешение на доступ к файлам (по новым стандартам Android 11+) -->
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
     <application
         android:name=".MyApplication"
@@ -17,8 +26,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Olimp"
+        android:enableOnBackInvokedCallback="true"
+        android:resizeableActivity="true"
         tools:targetApi="31">
 
+        <!-- Splash Screen -->
         <activity
             android:name=".ui.SplashActivity"
             android:exported="true">
@@ -28,28 +40,70 @@
             </intent-filter>
         </activity>
 
+        <!-- Логин -->
         <activity
             android:name=".ui.LoginActivity"
-            android:exported="true"/>
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
+        <!-- Регистрация -->
         <activity
             android:name=".ui.RegisterActivity"
-            android:exported="true"/>
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
+        <!-- Подтверждение email -->
         <activity
             android:name=".ui.VerifyEmailActivity"
-            android:exported="true"/>
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
+        <!-- Восстановление пароля -->
         <activity
             android:name=".ui.ForgotPasswordActivity"
-            android:exported="true"/>
-        <activity
-            android:name=".ui.ResetPasswordActivity"
-            android:exported="true"/>
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
         <activity
+            android:name=".ui.ResetPasswordActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
+        <!-- Главная активность -->
+        <activity
             android:name=".ui.MainActivity"
-            android:exported="true"/>
+            android:exported="true"
+            android:theme="@style/Theme.Olimp"/>
+
+        <!-- Детали новостей -->
+        <activity
+            android:name=".ui.NewsDetailActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Olimp"/>
+
+        <!-- Настройки -->
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
+        <!-- Мои мероприятия -->
+        <activity
+            android:name=".ui.MyEventsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
+        <!-- Создание мероприятия (добавлено) -->
+        <activity
+            android:name=".ui.events.CreateEventActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Olimp"/>
+
+        <!-- Детали мероприятия (если нужно отдельное Activity) -->
+        <activity
+            android:name=".ui.events.EventDetailActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Olimp"/>
 
     </application>
 </manifest>

@@ -1,39 +1,72 @@
-<LinearLayout
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:orientation="vertical">
+    android:background="@drawable/bg_gradient"
+    android:padding="24dp">
 
-    <EditText
-        android:id="@+id/usernameEditText"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:hint="Имя пользователя"
-        android:minHeight="48dp" />
+        android:orientation="vertical"
+        android:gravity="center">
 
-    <EditText
-        android:id="@+id/emailEditText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:hint="E-mail"
-        android:inputType="textEmailAddress"
-        android:minHeight="48dp" />
+        <!-- Логотип -->
+        <ImageView
+            android:id="@+id/logoImageView"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/logo"
+            android:layout_marginBottom="32dp"
+            android:contentDescription="Логотип"/>
 
-    <EditText
-        android:id="@+id/passwordEditText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:hint="Пароль"
-        android:inputType="textPassword"
-        android:minHeight="48dp" />
+        <!-- Поле для ввода имени пользователя -->
+        <EditText
+            android:id="@+id/usernameEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:hint="Имя пользователя"
+            android:inputType="textPersonName"
+            android:background="@drawable/bg_input_field"
+            android:padding="12dp"
+            android:textColor="@color/black"/>
 
-    <Button
-        android:id="@+id/registerButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Зарегистрироваться"/>
-</LinearLayout>
+        <!-- Поле для ввода e-mail -->
+        <EditText
+            android:id="@+id/emailEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:hint="E-mail"
+            android:inputType="textEmailAddress"
+            android:background="@drawable/bg_input_field"
+            android:padding="12dp"
+            android:textColor="@color/black"/>
+
+        <!-- Поле для ввода пароля -->
+        <EditText
+            android:id="@+id/passwordEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:hint="Пароль"
+            android:inputType="textPassword"
+            android:background="@drawable/bg_input_field"
+            android:padding="12dp"
+            android:textColor="@color/black"/>
+
+        <!-- Кнопка "Зарегистрироваться" -->
+        <Button
+            android:id="@+id/registerButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Зарегистрироваться"
+            android:background="@drawable/bg_button_elevated"
+            android:textColor="@color/black"
+            android:paddingHorizontal="32dp"
+            android:paddingVertical="12dp"
+            android:layout_gravity="center"/>
+    </LinearLayout>
+</ScrollView>

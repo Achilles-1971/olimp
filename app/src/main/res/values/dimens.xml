@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Отступы -->
+    <dimen name="padding_small">8dp</dimen>
+    <dimen name="padding_medium">16dp</dimen>
+    <dimen name="padding_large">24dp</dimen>
+    <dimen name="default_padding">16dp</dimen>
+    <dimen name="default_padding_small">8dp</dimen>
+    <dimen name="default_margin">16dp</dimen>
+    <dimen name="default_margin_small">8dp</dimen>
+
+    <!-- Размеры шрифтов -->
+    <dimen name="text_size_heading">24sp</dimen>
+    <dimen name="text_size_subheading">20sp</dimen>
+    <dimen name="text_size_body">16sp</dimen>
+    <dimen name="text_size_button">16sp</dimen>
+    <dimen name="text_size_caption">12sp</dimen>
+
+    <!-- Размеры для элементов аватара -->
+    <dimen name="avatar_size">48dp</dimen>
+
+    <!-- Дополнительные размеры для экрана комментариев -->
+    <dimen name="comment_input_min_height">48dp</dimen>
+    <dimen name="btn_send_size">36dp</dimen>
+    <dimen name="comment_icon_size">24dp</dimen>
+    <dimen name="recycler_padding_vertical">8dp</dimen>
+    <dimen name="negative_margin_horizontal">16dp</dimen>
+</resources>

@@ -1,52 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:orientation="vertical">
+    android:background="@drawable/bg_gradient"
+    android:padding="24dp">
 
-    <!-- Поле для ввода e-mail -->
-    <EditText
-        android:id="@+id/emailEditText"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:hint="E-mail"
-        android:inputType="textEmailAddress"
-        android:minHeight="48dp" />
+        android:orientation="vertical"
+        android:gravity="center">
 
-    <!-- Поле для ввода пароля -->
-    <EditText
-        android:id="@+id/passwordEditText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:hint="Пароль"
-        android:inputType="textPassword"
-        android:minHeight="48dp" />
+        <!-- Логотип -->
+        <ImageView
+            android:id="@+id/logoImageView"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/logo"
+            android:layout_marginBottom="32dp"
+            android:contentDescription="Логотип"/>
 
-    <!-- Кнопка "Запомните меня" -->
-    <CheckBox
-        android:id="@+id/rememberMeCheckBox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Запомните меня"
-        android:layout_marginBottom="16dp"/>
+        <!-- Поле для ввода e-mail -->
+        <EditText
+            android:id="@+id/emailEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Введите e-mail"
+            android:fontFamily="@font/robotoslab_light"
+            android:inputType="textEmailAddress"
+            android:background="@drawable/bg_input_field"
+            android:padding="12dp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="12dp"/>
 
-    <!-- Кнопка "Забыл пароль" -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/forgotPasswordButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Забыл пароль" />
+        <!-- Поле для ввода пароля -->
+        <EditText
+            android:id="@+id/passwordEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Введите пароль"
+            android:fontFamily="@font/robotoslab_light"
+            android:inputType="textPassword"
+            android:background="@drawable/bg_input_field"
+            android:padding="12dp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="12dp"/>
 
-    <!-- Кнопка для входа -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/loginButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Войти"
-        android:layout_marginTop="16dp" />
+        <!-- Чекбокс "Запомните меня" -->
+        <CheckBox
+            android:id="@+id/rememberMeCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Запомните меня"
+            android:textColor="@color/black"
+            android:layout_marginBottom="12dp"/>
 
-</LinearLayout>
+        <!-- Кнопка "Забыл пароль" -->
+        <Button
+            android:id="@+id/forgotPasswordButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Забыл пароль"
+            android:fontFamily="@font/opensans_condensed_extrabold"
+            android:background="@drawable/bg_button_elevated"
+            android:textColor="@color/black"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- Кнопка "Войти" -->
+        <Button
+            android:id="@+id/loginButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Войти"
+            android:fontFamily="@font/opensans_condensed_extrabold"
+            android:background="@drawable/bg_button_elevated"
+            android:textColor="@color/black"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp"
+            android:layout_marginTop="16dp"/>
+    </LinearLayout>
+</ScrollView>

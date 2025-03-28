@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Обновленный стиль для BottomNavigationView с использованием новой цветовой схемы -->
+    <style name="Widget.BottomNavigationView.Olimp" parent="Widget.MaterialComponents.BottomNavigationView">
+        <!-- Иконки и текст: выбранный элемент – золотой, не выбранный – черный (используем селектор) -->
+        <item name="itemIconTint">@drawable/nav_item_color_state</item>
+        <item name="itemTextColor">@drawable/nav_item_color_state</item>
+        <!-- Фон навигационной панели: чистый белый для хорошего контраста -->
+        <item name="android:background">@color/white</item>
+        <!-- Добавляем небольшую тень для выделения панели -->
+        <item name="android:elevation">8dp</item>
+    </style>
+
+    <!-- Кастомный стиль для чипов -->
+    <style name="CustomChipStyle" parent="Widget.MaterialComponents.Chip.Choice">
+        <!-- Используем новый стиль для текста чипов -->
+        <item name="android:textAppearance">@style/CustomChipTextAppearance</item>
+        <item name="chipBackgroundColor">@color/chip_background_color</item>
+        <item name="android:textColor">@color/chip_text_color</item>
+        <item name="chipStrokeColor">@color/chip_stroke_color</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipCornerRadius">16dp</item>
+        <item name="rippleColor">@color/chip_ripple_color</item>
+        <item name="android:elevation">2dp</item>
+    </style>
+
+    <!-- Обновленный стиль текста для чипов -->
+    <style name="CustomChipTextAppearance" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <!-- Стиль для круглой аватарки -->
+    <style name="CircleImageView">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+</resources>

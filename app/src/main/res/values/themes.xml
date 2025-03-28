@@ -1,9 +1,20 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Базовая тема приложения -->
     <style name="Base.Theme.Olimp" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <!-- Фон с градиентом -->
+        <item name="android:windowBackground">@drawable/bg_gradient</item>
+        <!-- Основной акцент – золотой -->
+        <item name="colorPrimary">@color/gold</item>
+        <item name="colorPrimaryVariant">@color/gold</item>
+        <item name="colorSecondary">@color/gold</item>
+        <!-- Текст – черный -->
+        <item name="android:textColorPrimary">@color/black</item>
+        <!-- Дополнительные атрибуты для корректного отображения компонентов -->
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/black</item>
     </style>
 
+    <!-- Основная тема приложения -->
     <style name="Theme.Olimp" parent="Base.Theme.Olimp" />
 </resources>

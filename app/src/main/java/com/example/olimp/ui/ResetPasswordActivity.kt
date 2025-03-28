@@ -34,7 +34,7 @@ class ResetPasswordActivity : AppCompatActivity() {
 
         initViews()
 
-        authRepository = AuthRepository(RetrofitInstance.createRetrofitInstance(this))
+        authRepository = AuthRepository()
 
         resetPasswordButton.setOnClickListener {
             val resetCode = resetCodeEditText.text.toString().trim()

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Фон светло-серый с лёгкой прозрачностью -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F5F5F5" />
+            <corners android:radius="12dp"/>
+        </shape>
+    </item>
+
+    <!-- Обводка золотым цветом -->
+    <item android:bottom="2dp" android:top="2dp" android:left="2dp" android:right="2dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/gold"/>
+            <corners android:radius="12dp"/>
+        </shape>
+    </item>
+
+    <!-- Внутренняя тень для повышения читаемости -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#EAEAEA"/>
+            <corners android:radius="12dp"/>
+        </shape>
+    </item>
+</layer-list>

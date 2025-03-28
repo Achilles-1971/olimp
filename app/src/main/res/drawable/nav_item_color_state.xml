@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Состояние выбранного элемента – золотой -->
+    <item android:state_checked="true" android:color="@color/gold" />
+
+    <!-- Состояние при нажатии – золотой с прозрачностью (50% opacity) -->
+    <item android:state_pressed="true" android:color="#80D4AF37" />
+
+    <!-- Состояние по умолчанию – черный -->
+    <item android:color="@color/black" />
+</selector>

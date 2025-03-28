@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Стиль для заголовков (Headline) с использованием OpenSans Condensed ExtraBold -->
+    <style name="TextAppearance.Olimp.Headline" parent="TextAppearance.MaterialComponents.Headline4">
+        <item name="android:textColor">@color/black</item>
+        <!-- Размер можно задать через dimens, например, 24sp -->
+        <item name="android:textSize">@dimen/text_size_heading</item>
+        <item name="android:fontFamily">@font/opensans_condensed_extrabold</item>
+    </style>
+
+    <!-- Стиль для обычного текста (Body) с использованием RobotoSlab Light -->
+    <style name="TextAppearance.Olimp.Body" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">@color/black</item>
+        <!-- Размер текста для основного текста, например, 16sp -->
+        <item name="android:textSize">@dimen/text_size_body</item>
+        <item name="android:fontFamily">@font/robotoslab_light</item>
+    </style>
+
+    <!-- Стиль для дополнительного текста (Caption) с использованием OpenSans Light Italic -->
+    <style name="TextAppearance.Olimp.Caption" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">@dimen/text_size_caption</item>
+        <item name="android:fontFamily">@font/opensans_light_italic</item>
+    </style>
+</resources>

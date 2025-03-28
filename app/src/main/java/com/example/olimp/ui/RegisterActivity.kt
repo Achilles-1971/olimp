@@ -33,7 +33,7 @@ class RegisterActivity : AppCompatActivity() {
         setContentView(R.layout.activity_register)
 
         // Передаем ApiService в AuthRepository через RetrofitInstance, передавая контекст
-        authRepository = AuthRepository(RetrofitInstance.createRetrofitInstance(this))
+        authRepository = AuthRepository()
 
         usernameEditText = findViewById(R.id.usernameEditText)
         emailEditText = findViewById(R.id.emailEditText)

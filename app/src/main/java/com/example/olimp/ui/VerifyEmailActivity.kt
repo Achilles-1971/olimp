@@ -23,7 +23,8 @@ class VerifyEmailActivity : AppCompatActivity() {
         setContentView(R.layout.activity_verify_email)
 
         // Инициализируем репозиторий с передачей правильного экземпляра api
-        authRepository = AuthRepository(RetrofitInstance.api)
+        authRepository = AuthRepository()
+
 
         verificationCodeEditText = findViewById(R.id.verificationCodeEditText)
         verifyButton = findViewById(R.id.verifyButton)

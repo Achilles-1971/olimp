@@ -42,8 +42,8 @@ class ForgotPasswordActivity : AppCompatActivity() {
         resetPasswordButton.visibility = View.GONE
 
         // Инициализация AuthRepository
-        val apiService = RetrofitInstance.createRetrofitInstance(this)
-        authRepository = AuthRepository(apiService)
+        val apiService = RetrofitInstance.getApi(this)
+        authRepository = AuthRepository()
 
         requestCodeButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()

@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:background="?android:attr/windowBackground">
+
+    <!-- Вертикальная линия для вложенных комментариев -->
+    <View
+        android:id="@+id/indentLine"
+        android:layout_width="2dp"
+        android:layout_height="match_parent"
+        android:background="@color/gray"
+        android:visibility="gone"
+        android:layout_marginStart="8dp" />
+
+    <!-- Аватар пользователя -->
+    <ImageView
+        android:id="@+id/ivAvatar"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="8dp"
+        android:layout_gravity="top"
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/desc_user_avatar"
+        tools:srcCompat="@drawable/ic_user_avatar" />
+
+    <!-- Контейнер для содержимого комментария -->
+    <LinearLayout
+        android:id="@+id/contentContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:background="@drawable/comment_background"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <!-- Кнопка "Показать ответы"/"Свернуть" для placeholder -->
+        <Button
+            android:id="@+id/btnShowReplies"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:text="Показать ответы"
+            android:textColor="@color/blue"
+            android:textSize="14sp"
+            android:background="@drawable/chip_background"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:drawableEnd="@drawable/ic_arrow_down"
+            android:drawablePadding="8dp"
+            android:clickable="false"
+            android:focusable="false" />
+
+        <!-- Блок для метки "Ответ на ..." и иконки -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="4dp">
+
+            <ImageView
+                android:id="@+id/ivReplyIcon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_reply2"
+                android:visibility="gone"
+                android:contentDescription="Иконка ответа"
+                android:layout_gravity="center_vertical" />
+
+            <TextView
+                android:id="@+id/tvReplyTo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:textSize="12sp"
+                android:textColor="#888888"
+                android:visibility="gone"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="Ответ на @username" />
+        </LinearLayout>
+
+        <!-- Текст комментария -->
+        <TextView
+            android:id="@+id/tvCommentContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#000000"
+            android:maxLines="3"
+            android:ellipsize="end"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            tools:text="Пример текста комментария, который может быть длинным и должен корректно обрезаться." />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="4dp">
+
+            <TextView
+                android:id="@+id/tvCommentAuthor"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="12sp"
+                android:textColor="#666666"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="AuthorName" />
+
+            <TextView
+                android:id="@+id/tvCommentCreatedAt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="#888888"
+                tools:text="10 Mar 2025, 14:00" />
+        </LinearLayout>
+
+        <!-- Панель действий (лайк, ответ, редактирование, удаление) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:paddingTop="4dp">
+
+            <ImageButton
+                android:id="@+id/btnLike"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Лайк"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_like_outline" />
+
+            <TextView
+                android:id="@+id/tvLikesCount"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="0"
+                android:textSize="12sp"
+                android:layout_marginStart="4dp"
+                android:layout_gravity="center_vertical" />
+
+            <ImageButton
+                android:id="@+id/btnReply"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Ответить"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_reply" />
+
+            <ImageButton
+                android:id="@+id/btnEdit"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Редактировать"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_edit" />
+
+            <ImageButton
+                android:id="@+id/btnDelete"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Удалить"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_delete" />
+        </LinearLayout>
+
+    </LinearLayout>
+</LinearLayout>

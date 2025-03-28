@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Пункт меню Новости -->
+    <item
+        android:id="@+id/nav_news"
+        android:icon="@drawable/ic_news"
+        android:title="@string/nav_news"
+        android:contentDescription="@string/desc_news"
+        app:showAsAction="ifRoom" />
+
+    <!-- Пункт меню События -->
+    <item
+        android:id="@+id/nav_events"
+        android:icon="@drawable/ic_events"
+        android:title="@string/nav_events"
+        android:contentDescription="@string/desc_events"
+        app:showAsAction="ifRoom" />
+
+    <!-- Пункт меню Сообщения -->
+    <item
+        android:id="@+id/nav_messages"
+        android:icon="@drawable/ic_messages"
+        android:title="@string/nav_messages"
+        android:contentDescription="@string/desc_messages"
+        app:showAsAction="ifRoom" />
+
+    <!-- Пункт меню Профиль -->
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_profile"
+        android:title="@string/nav_profile"
+        android:contentDescription="@string/desc_profile"
+        app:showAsAction="ifRoom" />
+
+</menu>

@@ -1,5 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Основные цвета -->
+    <color name="white">#FFFFFF</color>
+    <color name="gold">#D4AF37</color> <!-- Пример золотого оттенка -->
+    <color name="black">#000000</color>
+
+    <!-- Дополнительные цвета -->
+    <color name="background_color">@color/white</color>
+    <color name="primary_color">@color/gold</color>
+    <color name="text_primary">@color/black</color>
+    <color name="green">#00FF00</color>
+    <color name="blue">#0000FF</color>
+    <color name="yellow">#FFFF00</color>
+    <!-- Можно добавить светлые/темные оттенки для нюансов, если потребуется -->
+    <color name="gray_light">#F5F5F5</color>
+    <color name="gray_dark">#333333</color>
+
+    <color name="red">#FF0000</color>
+    <color name="gray">#757575</color>
+    <color name="chip_background_color">@color/chip_background_selector</color>
+    <color name="chip_text_color">@color/chip_text_selector</color>
+    <color name="chip_icon_tint">@color/chip_icon_selector</color>
+    <color name="chip_stroke_color">#B0BEC5</color> <!-- Серо-голубая обводка -->
+    <color name="chip_ripple_color">#80D4AF37</color> <!-- Полупрозрачный золотой для эффекта нажатия -->
 </resources>

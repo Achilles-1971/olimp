@@ -1,3 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">olimp</string>
+    <!-- Название приложения -->
+    <string name="app_name">Olimp</string>
+
+    <!-- Описание аватара пользователя -->
+    <string name="desc_user_avatar">Аватар пользователя</string>
+
+    <!-- Описание логотипа -->
+    <string name="logo_description">Логотип приложения</string>
+
+    <!-- Строки для экрана входа -->
+    <string name="login_hint_email">Введите email</string>
+    <string name="login_hint_password">Введите пароль</string>
+    <string name="login_button">Войти</string>
+    <string name="forgot_password">Забыли пароль?</string>
+    <string name="register_button">Зарегистрироваться</string>
+    <string name="welcome_text">Рады приветствовать вас!</string>
+
+    <!-- Строки для нижнего навигационного меню -->
+    <string name="nav_news">Новости</string>
+    <string name="nav_events">События</string>
+    <string name="nav_messages">Сообщения</string>
+    <string name="nav_profile">Профиль</string>
+
+    <!-- Заголовки экранов -->
+    <string name="main_title_news">Новости</string>
+    <string name="main_title_events">События</string>
+    <string name="main_title_messages">Сообщения</string>
+    <string name="main_title_profile">Профиль</string>
+
+    <!-- Новые строки для улучшения функциональности -->
+    <string name="like_button">Лайк</string>
+    <!-- Единообразная подсказка для комментария -->
+    <string name="comment_hint">Напишите комментарий...</string>
+    <string name="send_button">Отправить</string>
+    <string name="error_loading_news">Ошибка при загрузке новостей</string>
+    <string name="error_loading_comments">Ошибка при загрузке комментариев</string>
+    <string name="comment_posted">Комментарий добавлен!</string>
+    <string name="like_added">Лайк добавлен!</string>
+    <string name="like_error">Ошибка при добавлении лайка</string>
+    <string name="selected_image_desc">Выбранное изображение</string>
+
+    <!-- Описания для улучшения доступности (Accessibility) -->
+    <string name="desc_news">Раздел новостей</string>
+    <string name="desc_events">Раздел событий</string>
+    <string name="desc_messages">Раздел сообщений</string>
+    <string name="desc_profile">Профиль пользователя</string>
+    <!-- Новые строки для кнопок -->
+    <string name="desc_close">Закрыть</string>
+    <string name="desc_send_comment">Отправить комментарий</string>
+    <string name="error_invalid_event_id">Ошибка: неверный ID мероприятия</string>
+    <string name="error_loading_event_details">Не удалось загрузить детали мероприятия</string>
+    <string name="views_count">Просмотры: %d</string>
+    <string name="no_description">Описание отсутствует</string>
+    <string name="participate_button_clicked">Нажата кнопка \'Участвовать\' для eventId=%d</string>
+    <string name="comments_header">Комментарии (%d)</string>
+    <string name="write_comment">Напишите комментарий</string>
+    <string name="enter_comment_text">Введите текст комментария</string>
+    <string name="auth_required">Требуется авторизация</string>
+    <string name="comment_sent">Комментарий отправлен</string>
+    <string name="reply_to">Ответить @%s...</string>
+    <string name="edit_comment">Редактировать комментарий</string>
+    <string name="save">Сохранить</string>
+    <string name="cancel">Отмена</string>
+    <string name="comment_deleted">Комментарий удалён</string>
+    <string name="comment_updated">Комментарий обновлён</string>
+    <string name="no_user_data">Нет данных пользователя</string>
+    <string name="error">Ошибка: %s</string>
+    <string name="error_code">Ошибка: %d</string>
+    <string name="create_event">Создать мероприятие</string>
 </resources>

@@ -28,8 +28,8 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
 
         // Инициализация ApiService и репозитория
-        val apiService = RetrofitInstance.createRetrofitInstance(this)
-        authRepository = AuthRepository(apiService)
+        val apiService = RetrofitInstance.getApi(this)
+        authRepository = AuthRepository()
         sessionManager = SessionManager(this)
 
         emailEditText = findViewById(R.id.emailEditText)
@@ -48,10 +48,9 @@ class LoginActivity : AppCompatActivity() {
             loginUser(email, password)
         }
 
-        // Переход на экран сброса пароля (ForgotPasswordActivity)
+        // Переход на экран сброса пароля
         forgotPasswordButton.setOnClickListener {
-            val intent = Intent(this, ForgotPasswordActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, ForgotPasswordActivity::class.java))
         }
     }
 
@@ -62,12 +61,17 @@ class LoginActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body != null) {
-                        // Сохраняем токен и email
-                        sessionManager.saveAuthToken(body.token, email)
+                        // Из body получаем user_id и token
+                        val userId = body.user_id
+                        val token = body.token
+
+                        // Сохраняем токен, email и userId
+                        sessionManager.saveAuthToken(token, email, userId)
+
                         Toast.makeText(this@LoginActivity, "Вход выполнен", Toast.LENGTH_SHORT).show()
+
                         // Переход в MainActivity
-                        val intent = Intent(this@LoginActivity, MainActivity::class.java)
-                        startActivity(intent)
+                        startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                         finish()
                     } else {
                         Toast.makeText(this@LoginActivity, "Ошибка сервера", Toast.LENGTH_SHORT).show()

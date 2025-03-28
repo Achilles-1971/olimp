@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Тень для эффекта объёмности -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#E6C57C"/> <!-- Легкий золотистый фон для тени -->
+            <corners android:radius="28dp"/>
+        </shape>
+    </item>
+
+    <!-- Основная кнопка -->
+    <item android:top="4dp" android:left="2dp" android:right="2dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#FFD700"
+                android:endColor="#E6B800"
+                android:angle="90"/>
+            <corners android:radius="28dp"/>
+        </shape>
+    </item>
+</layer-list>

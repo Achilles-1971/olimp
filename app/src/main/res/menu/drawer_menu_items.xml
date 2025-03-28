@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Профиль -->
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_profile"
+        android:title="Профиль"
+        app:showAsAction="ifRoom" />
+
+    <!-- Настройки -->
+    <item
+        android:id="@+id/nav_settings"
+        android:icon="@drawable/ic_settings"
+        android:title="Настройки"
+        app:showAsAction="ifRoom" />
+
+    <!-- Мои мероприятия -->
+    <item
+        android:id="@+id/nav_my_events"
+        android:icon="@drawable/ic_events"
+        android:title="Мои мероприятия"
+        app:showAsAction="ifRoom" />
+
+    <!-- Выйти из аккаунта -->
+    <item
+        android:id="@+id/nav_logout"
+        android:icon="@drawable/ic_logout"
+        android:title="Выйти"
+        app:showAsAction="ifRoom" />
+</menu>
