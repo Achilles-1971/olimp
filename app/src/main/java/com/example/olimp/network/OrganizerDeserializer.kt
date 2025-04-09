@@ -8,11 +8,16 @@ import java.lang.reflect.Type
 
 class OrganizerDeserializer : JsonDeserializer<Organizer> {
     override fun deserialize(
-        json: JsonElement,
-        typeOfT: Type,
-        context: JsonDeserializationContext
+        json: JsonElement?,
+        typeOfT: Type?,
+        context: JsonDeserializationContext?
     ): Organizer {
-        // 1) Если organizer приходит просто числом (ID):
+        // Если json null или пустой, возвращаем Organizer с минимальными данными
+        if (json == null || json.isJsonNull) {
+            throw IllegalArgumentException("Organizer JSON cannot be null")
+        }
+
+        // 1) Если organizer приходит просто числом (ID)
         if (json.isJsonPrimitive && json.asJsonPrimitive.isNumber) {
             return Organizer.fromId(json.asInt)
         }
@@ -20,15 +25,15 @@ class OrganizerDeserializer : JsonDeserializer<Organizer> {
         // 2) Если organizer приходит объектом, парсим поля вручную
         val jsonObj = json.asJsonObject
 
-        // Предположим, что поля называются "id" и "username"
+        // Безопасно извлекаем поля, проверяя на null
         val id = jsonObj.get("id")?.asInt
-        val username = jsonObj.get("username")?.asString
-        val email = jsonObj.get("email")?.asString
-        val role = jsonObj.get("role")?.asString
-        val avatar = jsonObj.get("avatar")?.asString
-        val bio = jsonObj.get("bio")?.asString
-        val createdAt = jsonObj.get("created_at")?.asString
-        val updatedAt = jsonObj.get("updated_at")?.asString
+        val username = jsonObj.get("username")?.takeIf { !it.isJsonNull }?.asString
+        val email = jsonObj.get("email")?.takeIf { !it.isJsonNull }?.asString
+        val role = jsonObj.get("role")?.takeIf { !it.isJsonNull }?.asString
+        val avatar = jsonObj.get("avatar")?.takeIf { !it.isJsonNull }?.asString
+        val bio = jsonObj.get("bio")?.takeIf { !it.isJsonNull }?.asString
+        val createdAt = jsonObj.get("created_at")?.takeIf { !it.isJsonNull }?.asString
+        val updatedAt = jsonObj.get("updated_at")?.takeIf { !it.isJsonNull }?.asString
 
         return Organizer(
             id = id,

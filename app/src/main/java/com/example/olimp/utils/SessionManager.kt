@@ -22,42 +22,40 @@ class SessionManager(context: Context) {
         private const val KEY_AVATAR = "avatar"
         private const val KEY_IS_EMAIL_CONFIRMED = "is_email_confirmed"
         private const val KEY_ROLE = "role"
-
-        // Если в UserResponse есть поля bio, created_at, updated_at — добавим ключи:
         private const val KEY_BIO = "bio"
         private const val KEY_CREATED_AT = "created_at"
         private const val KEY_UPDATED_AT = "updated_at"
+        private const val KEY_LOCATION_PERMISSION_REQUESTED = "location_permission_requested"
+        private const val KEY_FCM_TOKEN = "fcm_token" // Новый ключ для FCM-токена
     }
 
     fun saveAuthToken(token: String, email: String, userId: Int) {
         val cleanToken = token.trim().removePrefix("Token ")
-        prefs.edit()
-            .putString(KEY_AUTH_TOKEN, cleanToken)
-            .putString(KEY_USER_EMAIL, email)
-            .putInt(KEY_USER_ID, userId)
-            .putBoolean(KEY_IS_LOGGED_IN, true)
-            .apply()
-        Log.d("SessionManager", "🔒 Сохранён токен: '$cleanToken'")
+        with(prefs.edit()) {
+            putString(KEY_AUTH_TOKEN, cleanToken)
+            putString(KEY_USER_EMAIL, email)
+            putInt(KEY_USER_ID, userId)
+            putBoolean(KEY_IS_LOGGED_IN, true)
+            apply()
+        }
+        Log.d("SessionManager", "🔒 Сохранён токен: '$cleanToken', email: '$email', userId: $userId")
     }
 
     /**
      * Сохраняет данные пользователя (UserResponse) в SharedPreferences.
      */
     fun saveUserProfile(user: UserResponse) {
-        Log.d("SessionManager", "Saving user profile: id=${user.id}, avatar=${user.avatar}")
-
-        prefs.edit().apply {
+        Log.d("SessionManager", "Сохранение профиля: id=${user.id}, username=${user.username}, email=${user.email}, avatar=${user.avatar}")
+        with(prefs.edit()) {
             putInt(KEY_USER_ID, user.id)
             putString(KEY_USERNAME, user.username)
             putString(KEY_EMAIL, user.email)
             putString(KEY_AVATAR, user.avatar)
-            putBoolean(KEY_IS_EMAIL_CONFIRMED, user.isEmailConfirmed ?: false)
+            user.isEmailConfirmed?.let { putBoolean(KEY_IS_EMAIL_CONFIRMED, it) }
             putString(KEY_ROLE, user.role)
-            // Дополнительные поля, если есть:
             putString(KEY_BIO, user.bio)
             putString(KEY_CREATED_AT, user.created_at)
             putString(KEY_UPDATED_AT, user.updated_at)
-
             apply()
         }
     }
@@ -77,40 +75,66 @@ class SessionManager(context: Context) {
     fun updateAuthToken(newToken: String) {
         val cleanToken = newToken.removePrefix("Token ").trim()
         prefs.edit().putString(KEY_AUTH_TOKEN, cleanToken).apply()
-        Log.d("SessionManager", "Updated token: '$cleanToken'")
+        Log.d("SessionManager", "🔄 Обновлён токен: '$cleanToken'")
     }
 
     /**
      * Возвращает email пользователя, сохранённый как user_email.
      */
-    fun getUserEmail(): String? = prefs.getString(KEY_USER_EMAIL, null)
+    fun getUserEmail(): String? {
+        val email = prefs.getString(KEY_USER_EMAIL, null)
+        Log.d("SessionManager", "📧 Получен email: '$email'")
+        return email
+    }
 
     /**
      * Возвращает userId, если установлен (или null, если -1).
      */
-    fun getUserId(): Int? = prefs.getInt(KEY_USER_ID, -1).takeIf { it != -1 }
+    fun getUserId(): Int? {
+        val userId = prefs.getInt(KEY_USER_ID, -1).takeIf { it != -1 }
+        Log.d("SessionManager", "🆔 Получен userId: $userId")
+        return userId
+    }
 
     /**
      * Проверяет, залогинен ли пользователь.
      */
-    fun isUserLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
-
-    fun clearSession() = prefs.edit().clear().apply()
-
-    fun clearAuthToken() {
-        prefs.edit()
-            .remove(KEY_AUTH_TOKEN)
-            .putBoolean(KEY_IS_LOGGED_IN, false)
-            .apply()
-        Log.d("SessionManager", "🚫 Токен удалён, статус входа сброшен")
+    fun isUserLoggedIn(): Boolean {
+        val isLoggedIn = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
+        Log.d("SessionManager", "🔐 Статус входа: $isLoggedIn")
+        return isLoggedIn
     }
 
-    fun logout() {
-        prefs.edit().apply {
+    /**
+     * Очищает всю сессию.
+     */
+    fun clearSession() {
+        prefs.edit().clear().apply()
+        Log.d("SessionManager", "🧹 Вся сессия очищена")
+    }
+
+    /**
+     * Удаляет только токен и статус входа.
+     */
+    fun clearAuthToken() {
+        with(prefs.edit()) {
             remove(KEY_AUTH_TOKEN)
             putBoolean(KEY_IS_LOGGED_IN, false)
             apply()
         }
+        Log.d("SessionManager", "🚫 Токен удалён, статус входа сброшен")
+    }
+
+    /**
+     * Выход из системы (аналог clearAuthToken).
+     */
+    fun logout() {
+        with(prefs.edit()) {
+            remove(KEY_AUTH_TOKEN)
+            putBoolean(KEY_IS_LOGGED_IN, false)
+            apply()
+        }
+        Log.d("SessionManager", "🏃 Выход из системы выполнен")
     }
 
     /**
@@ -131,7 +155,7 @@ class SessionManager(context: Context) {
         val createdAt = prefs.getString(KEY_CREATED_AT, null)
         val updatedAt = prefs.getString(KEY_UPDATED_AT, null)
 
-        return UserResponse(
+        val user = UserResponse(
             id = userId,
             username = username,
             email = email,
@@ -142,5 +166,47 @@ class SessionManager(context: Context) {
             created_at = createdAt,
             updated_at = updatedAt
         )
+        Log.d("SessionManager", "👤 Профиль пользователя восстановлен: id=$userId, username=$username")
+        return user
+    }
+
+    /**
+     * Проверяет, был ли уже выполнен запрос разрешения на местоположение.
+     */
+    fun hasRequestedLocationPermission(): Boolean {
+        val requested = prefs.getBoolean(KEY_LOCATION_PERMISSION_REQUESTED, false)
+        Log.d("SessionManager", "📍 Был ли запрос разрешения на местоположение: $requested")
+        return requested
+    }
+
+    /**
+     * Устанавливает флаг, что запрос разрешения на местоположение был выполнен.
+     */
+    fun setLocationPermissionRequested(requested: Boolean) {
+        with(prefs.edit()) {
+            putBoolean(KEY_LOCATION_PERMISSION_REQUESTED, requested)
+            apply()
+        }
+        Log.d("SessionManager", "📍 Установлен флаг запроса разрешения на местоположение: $requested")
+    }
+
+    /**
+     * Сохраняет FCM-токен в SharedPreferences.
+     */
+    fun saveFcmToken(token: String) {
+        with(prefs.edit()) {
+            putString(KEY_FCM_TOKEN, token)
+            apply()
+        }
+        Log.d("SessionManager", "🔥 Сохранён FCM-токен: '$token'")
+    }
+
+    /**
+     * Получает FCM-токен из SharedPreferences.
+     */
+    fun getFcmToken(): String? {
+        val token = prefs.getString(KEY_FCM_TOKEN, null)
+        Log.d("SessionManager", "🔥 Получен FCM-токен: '$token'")
+        return token
     }
 }

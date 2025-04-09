@@ -20,9 +20,9 @@
             android:textStyle="bold"
             android:textColor="@color/black"
             android:gravity="center"
-            android:layout_marginBottom="24dp"/>
+            android:layout_marginBottom="24dp" />
 
-        <!-- Пример параметра в настройках -->
+        <!-- Основной переключатель -->
         <Switch
             android:id="@+id/switchNotifications"
             android:layout_width="match_parent"
@@ -30,7 +30,7 @@
             android:layout_marginBottom="16dp"
             android:checked="true"
             android:minHeight="48dp"
-            android:text="Уведомления"
+            android:text="Уведомления в приложении"
             android:textColor="@color/black" />
 
         <Switch
@@ -41,6 +41,44 @@
             android:minHeight="48dp"
             android:text="Тёмная тема"
             android:textColor="@color/black" />
+
+        <!-- Категории PUSH-уведомлений -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Push-уведомления"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="8dp" />
+
+        <Switch
+            android:id="@+id/switchPushEvents"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="О мероприятиях"
+            android:checked="true"
+            android:textColor="@color/black"
+            android:minHeight="48dp" />
+
+        <Switch
+            android:id="@+id/switchPushModeration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ответы модерации"
+            android:checked="true"
+            android:textColor="@color/black"
+            android:minHeight="48dp" />
+
+        <Switch
+            android:id="@+id/switchPushLikes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Лайки и комментарии"
+            android:checked="true"
+            android:textColor="@color/black"
+            android:minHeight="48dp" />
 
     </LinearLayout>
 </ScrollView>

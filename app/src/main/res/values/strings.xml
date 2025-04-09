@@ -31,29 +31,31 @@
 
     <!-- Новые строки для улучшения функциональности -->
     <string name="like_button">Лайк</string>
-    <!-- Единообразная подсказка для комментария -->
     <string name="comment_hint">Напишите комментарий...</string>
     <string name="send_button">Отправить</string>
     <string name="error_loading_news">Ошибка при загрузке новостей</string>
     <string name="error_loading_comments">Ошибка при загрузке комментариев</string>
-    <string name="comment_posted">Комментарий добавлен!</string>
-    <string name="like_added">Лайк добавлен!</string>
+    <string name="comment_posted">Комментарий добавлен</string>
+    <string name="like_added">Лайк добавлен</string>
     <string name="like_error">Ошибка при добавлении лайка</string>
     <string name="selected_image_desc">Выбранное изображение</string>
 
-    <!-- Описания для улучшения доступности (Accessibility) -->
+    <!-- Доступность (Accessibility) -->
     <string name="desc_news">Раздел новостей</string>
     <string name="desc_events">Раздел событий</string>
     <string name="desc_messages">Раздел сообщений</string>
     <string name="desc_profile">Профиль пользователя</string>
-    <!-- Новые строки для кнопок -->
+
+    <!-- Кнопки -->
     <string name="desc_close">Закрыть</string>
     <string name="desc_send_comment">Отправить комментарий</string>
+
+    <!-- Ошибки и сообщения -->
     <string name="error_invalid_event_id">Ошибка: неверный ID мероприятия</string>
     <string name="error_loading_event_details">Не удалось загрузить детали мероприятия</string>
     <string name="views_count">Просмотры: %d</string>
     <string name="no_description">Описание отсутствует</string>
-    <string name="participate_button_clicked">Нажата кнопка \'Участвовать\' для eventId=%d</string>
+    <string name="participate_button_clicked">Нажата кнопка Участвовать для eventId=%d</string>
     <string name="comments_header">Комментарии (%d)</string>
     <string name="write_comment">Напишите комментарий</string>
     <string name="enter_comment_text">Введите текст комментария</string>
@@ -62,11 +64,41 @@
     <string name="reply_to">Ответить @%s...</string>
     <string name="edit_comment">Редактировать комментарий</string>
     <string name="save">Сохранить</string>
-    <string name="cancel">Отмена</string>
     <string name="comment_deleted">Комментарий удалён</string>
     <string name="comment_updated">Комментарий обновлён</string>
     <string name="no_user_data">Нет данных пользователя</string>
     <string name="error">Ошибка: %s</string>
     <string name="error_code">Ошибка: %d</string>
     <string name="create_event">Создать мероприятие</string>
+    <string name="address_not_specified">Адрес не указан</string>
+    <string name="address_copied">Адрес скопирован</string>
+    <string name="no_address_available">Адрес не указан</string>
+    <string name="no_map_app">Нет приложений для открытия карт</string>
+    <string name="details_header">Подробности мероприятия</string>
+    <string name="expand_collapse_desc">Развернуть или свернуть подробности</string>
+    <string name="open_map_desc">Открыть адрес на карте</string>
+    <string name="copy_address_desc">Скопировать адрес</string>
+    <string name="notification_icon">Иконка уведомления</string>
+    <string name="requested">Запрошено</string>
+    <string name="cancel">Отменить</string>
+    <string name="avatar">Аватар</string>
+    <string name="add">Добавить</string>
+    <string name="cancel_request">Отменить</string>
+    <string name="pending">Ожидается</string>
+    <string name="request_sent">Заявка отправлена</string>
+
+    <!-- Кнопки регистрации -->
+    <string name="participate_button">Участвовать</string>
+    <string name="cancel_participation_button">Отказаться от участия</string>
+    <string name="registered_successfully">Успешно зарегистрированы</string>
+    <string name="cancelled_successfully">Вы отказались от участия</string>
+    <string name="error_registering">Ошибка при регистрации</string>
+    <string name="error_cancelling">Ошибка при отмене участия</string>
+    <string name="auth_error">Ошибка авторизации. Пожалуйста, войдите снова</string>
+
+    <!-- Карточка мероприятия -->
+    <string name="participants_label">Участники</string>
+    <string name="time_left_label">Осталось</string>
+    <string name="event_finished">Завершено</string>
+    <string name="no_data">Нет данных</string>
 </resources>

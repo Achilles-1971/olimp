@@ -7,7 +7,9 @@ import com.example.olimp.ui.LoginActivity
 import com.example.olimp.utils.SessionManager
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
+import okio.Buffer
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
@@ -20,31 +22,47 @@ object RetrofitInstance {
 
     private fun createOkHttpClient(context: Context): OkHttpClient {
         val sessionManager = SessionManager(context)
+        val loggingInterceptor = HttpLoggingInterceptor { message ->
+            Log.d("RetrofitInstance", "🌐 $message")
+        }.apply {
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+        }
+
         return OkHttpClient.Builder()
-            .addInterceptor(HttpLoggingInterceptor().apply {
-                level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
-            })
+            .addInterceptor(loggingInterceptor)
             .addInterceptor { chain ->
-                val requestBuilder = chain.request().newBuilder()
+                val request: Request = chain.request()
+                val requestBuilder = request.newBuilder()
                 val token = sessionManager.getAuthToken()
                 if (!token.isNullOrEmpty()) {
                     Log.d("RetrofitInstance", "🟢 Токен добавлен к запросу: Token $token")
                     requestBuilder.addHeader("Authorization", "Token $token")
                 } else {
-                    Log.w("RetrofitInstance", "❌ Токен отсутствует для ${chain.request().url}")
+                    Log.w("RetrofitInstance", "❌ Токен отсутствует для ${request.url}")
                 }
                 requestBuilder.addHeader("Content-Type", "application/json")
-                val request = requestBuilder.build()
-                Log.d("RetrofitInstance", "📤 Полный запрос: ${request.method} ${request.url}")
-                Log.d("RetrofitInstance", "📤 Заголовки: ${request.headers}")
-                val response = chain.proceed(request)
-                Log.d("RetrofitInstance", "📥 Ответ: ${response.code} ${response.message}")
-                response
-            }
-            .addInterceptor { chain ->
-                val response = chain.proceed(chain.request())
+
+                // Логируем тело запроса, если оно есть
+                val requestBody = request.body
+                if (requestBody != null) {
+                    val buffer = Buffer()
+                    requestBody.writeTo(buffer)
+                    val bodyString = buffer.readUtf8()
+                    Log.d("RetrofitInstance", "📤 Тело запроса: $bodyString")
+                } else {
+                    Log.d("RetrofitInstance", "📤 Тело запроса отсутствует")
+                }
+
+                val modifiedRequest = requestBuilder.build()
+                Log.d("RetrofitInstance", "📤 Полный запрос: ${modifiedRequest.method} ${modifiedRequest.url}")
+                Log.d("RetrofitInstance", "📤 Заголовки: ${modifiedRequest.headers}")
+
+                val response = chain.proceed(modifiedRequest)
+                Log.d("RetrofitInstance", "📥 Код ответа: ${response.code} ${response.message}")
+
+                // Обработка 401 Unauthorized
                 if (response.code == 401) {
-                    Log.d("RetrofitInstance", "🚨 401 Unauthorized - Переход на экран логина")
+                    Log.w("RetrofitInstance", "🚨 401 Unauthorized - Переход на экран логина")
                     sessionManager.clearAuthToken()
                     val intent = Intent(context, LoginActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -63,7 +81,7 @@ object RetrofitInstance {
         .serializeNulls()
         .setLenient()
         .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-        .registerTypeAdapter(Organizer::class.java, OrganizerDeserializer()) // Добавляем десериализатор
+        .registerTypeAdapter(Organizer::class.java, OrganizerDeserializer())
         .create()
 
     private fun getRetrofit(context: Context): Retrofit {

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Vector asset для песочных часов (пример, можно настроить под себя) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M6,2v6c0,1.1 0.9,2 2,2h8c1.1,0 2,-0.9 2,-2V2h-2v6H8V2H6zM6,20h2v-6h8v6h2v-6c0,-1.1 -0.9,-2 -2,-2H8c-1.1,0 -2,0.9 -2,2v6z" />
+</vector>

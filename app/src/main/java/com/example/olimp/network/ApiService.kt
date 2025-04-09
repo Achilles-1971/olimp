@@ -1,6 +1,6 @@
 package com.example.olimp.network
 
-import com.example.olimp.data.models.*
+import com.example.olimp.data.models.*  // Используем модели из data.models
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import retrofit2.Response
@@ -24,11 +24,11 @@ data class VerifyEmailResponse(val message: String)
 // Модель для ответа на проверку существования пользователя
 data class CheckUserResponse(val exists: Boolean, val user_id: Int?)
 
-// Новая модель для ответа на запрос сброса пароля
+// Модель для запроса сброса пароля
 data class PasswordResetRequest(val email: String)
 data class PasswordResetResponse(val message: String)
 
-// Новая модель для подтверждения сброса пароля
+// Модель для подтверждения сброса пароля
 data class PasswordResetConfirmRequest(
     val email: String,
     @SerializedName("reset_code") val resetCode: String,
@@ -36,21 +36,33 @@ data class PasswordResetConfirmRequest(
 )
 data class PasswordResetConfirmResponse(val message: String)
 
-// Новая модель для ответа на добавление просмотра
+// Модель для ответа на добавление просмотра
 data class ViewResponse(
     @SerializedName("views_count") val viewsCount: Int
 )
 
-// Существующий sealed class для обработки ответов
+// Модель для ответа на регистрацию на событие
+data class EventRegistrationResponse(
+    val id: Int,
+    @SerializedName("event") val eventId: Int,
+    @SerializedName("user") val userId: Int,
+    val status: String,
+    @SerializedName("registered_at") val registeredAt: String
+)
+
 sealed class ApiResponse<out T> {
     data class Success<T>(val data: T) : ApiResponse<T>()
     data class Error(val code: Int, val message: String?) : ApiResponse<Nothing>()
     object NetworkError : ApiResponse<Nothing>()
 }
 
+data class FriendRequest(
+    val friendship_id: Int
+)
+data class FriendRequestParams(val user_id: Int, val friend_id: Int)
+
 interface ApiService {
 
-    // Аутентификация и регистрация
     @POST("api/register/")
     suspend fun registerUser(@Body request: RegisterRequest): Response<RegisterResponse>
 
@@ -69,12 +81,14 @@ interface ApiService {
     @GET("api/check_user_exists/")
     suspend fun checkUserExists(@Query("email") email: String): Response<CheckUserResponse>
 
-    // Пользователи (авторизация теперь происходит через интерсептор)
+    // Пользователи
     @GET("api/users/{id}/")
     suspend fun getUserById(
         @Path("id") id: Int
     ): Response<UserResponse>
-    // Примечание: Логи для этого метода добавлены в AuthRepository.kt и RetrofitInstance.kt
+
+    @GET("api/users/")
+    suspend fun getAllUsers(): Response<List<UserResponse>>
 
     // Новости
     @GET("api/news/")
@@ -95,7 +109,7 @@ interface ApiService {
     @POST("api/news/{id}/like/")
     suspend fun addLike(
         @Path("id") newsId: Int
-    ): Response<LikeResponse> // Уже правильно настроен
+    ): Response<LikeResponse>
 
     // Комментарии
     @GET("api/comments/")
@@ -105,6 +119,7 @@ interface ApiService {
         @Query("page") page: Int? = null
     ): Response<PaginatedCommentsResponse>
 
+
     @GET("api/comments/latest/{news_id}/")
     suspend fun getLatestComment(
         @Path("news_id") newsId: Int
@@ -113,7 +128,7 @@ interface ApiService {
     @POST("api/comments/create/")
     suspend fun createComment(
         @Body comment: CommentRequest
-    ): Response<Comment>
+    ): Response<List<Comment>>
 
     @PUT("api/comments/{id}/update/")
     suspend fun updateComment(
@@ -131,6 +146,7 @@ interface ApiService {
         @Path("id") commentId: Int
     ): Response<CommentLikeToggleResponse>
 
+    // События
     @GET("api/events/")
     suspend fun getEvents(
         @Query("filter") filter: String? = null
@@ -141,11 +157,8 @@ interface ApiService {
         @Body request: CreateEventRequest
     ): Response<Event>
 
-    // Если есть удаление:
     @DELETE("api/events/{id}/delete/")
-    suspend fun deleteEvent(
-        @Path("id") eventId: Int
-    ): Response<Unit>
+    suspend fun deleteEvent(@Path("id") eventId: Int): Response<Unit>
 
     @Multipart
     @POST("api/events/{id}/photos/add/")
@@ -159,4 +172,100 @@ interface ApiService {
         @Path("id") eventId: Int
     ): Response<Event>
 
+    @POST("api/events/{id}/register/")
+    suspend fun registerForEvent(
+        @Path("id") eventId: Int
+    ): Response<EventRegistrationResponse>
+
+    @DELETE("api/events/{id}/register/")
+    suspend fun cancelParticipation(
+        @Path("id") eventId: Int
+    ): Response<Unit>
+
+    @Multipart
+    @PATCH("api/events/{id}/update_preview/")
+    suspend fun updateEventPreview(
+        @Path("id") eventId: Int,
+        @Part image: MultipartBody.Part
+    ): Response<Event>
+
+    @GET("api/notifications/")
+    suspend fun getNotifications(): Response<List<NotificationModel>>
+
+    @DELETE("api/notifications/{id}/delete/")
+    suspend fun deleteNotification(@Path("id") id: Int): Response<Unit>
+
+    @GET("api/events/my_events/")
+    suspend fun myEvents(): Response<List<Event>>
+
+    @POST("api/register_fcm_token/")
+    suspend fun registerFcmToken(@Body request: FcmTokenRequest): Response<FcmTokenResponse>
+
+    data class FcmTokenRequest(val token: String)
+    data class FcmTokenResponse(
+        val message: String,
+        val id: Int,
+        val user: Int,
+        val token: String,
+        val created_at: String?,
+        val updated_at: String?
+    )
+
+    @POST("api/update_push_settings/")
+    suspend fun updatePushSettings(@Body settings: PushSettingsRequest): Response<Unit>
+
+    data class PushSettingsRequest(
+        @SerializedName("events") val events: Boolean,
+        @SerializedName("moderation") val moderation: Boolean,
+        @SerializedName("likes_comments") val likesComments: Boolean
+    )
+
+    data class PushSettingsResponse(
+        val events: Boolean,
+        val moderation: Boolean,
+        @SerializedName("likes_comments") val likes_comments: Boolean
+    )
+
+    @GET("api/get_push_settings/")
+    suspend fun getPushSettings(): Response<PushSettingsResponse>
+
+    // Дружба
+    @GET("api/list_user_friendships/")
+    suspend fun getFriendships(): Response<List<Friendship>>
+
+    @POST("api/friendships/accept/")
+    suspend fun acceptFriend(@Body request: FriendRequest): Response<Unit>
+
+    @HTTP(method = "DELETE", path = "api/friendships/remove/", hasBody = true)
+    suspend fun removeFriend(@Body request: FriendRequest): Response<Unit>
+
+    @POST("api/friendships/add/")
+    suspend fun sendFriendRequest(@Body request: FriendRequestParams): Response<Unit>
+
+    @HTTP(method = "DELETE", path = "api/friendships/remove/", hasBody = true)
+    suspend fun cancelFriendRequest(@Body request: FriendRequestParams): Response<Unit>
+
+    @POST("api/friendships/accept/{user_id}/")
+    suspend fun acceptFriendRequest(@Path("user_id") userId: Int): Response<Unit>
+
+    @GET("api/list_user_friendships/")
+    suspend fun getFriendships(
+        @Query("filter") filter: String? = null
+    ): Response<List<Friendship>>
+
+    @POST("api/messages/send/")
+    suspend fun sendMessage(@Body request: MessageRequest): Response<MessageResponse>
+
+    @GET("api/messages/between/{user1}/{user2}/")
+    suspend fun getMessagesBetween(
+        @Path("user1") user1: Int,
+        @Path("user2") user2: Int,
+        @Query("page") page: Int? = null
+    ): Response<PaginatedMessagesResponse>
+
+    @POST("api/messages/{message_id}/read/")
+    suspend fun markMessageRead(@Path("message_id") messageId: Int): Response<MessageResponse>
+
+    @GET("api/messages/conversations/")
+    suspend fun listConversations(): Response<List<ConversationResponse>>
 }

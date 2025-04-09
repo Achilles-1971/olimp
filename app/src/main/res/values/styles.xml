@@ -35,4 +35,9 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>
+
+    <!-- Стиль для CircularProgressIndicator с анимацией -->
+    <style name="CustomProgressIndicator" parent="Widget.Material3.CircularProgressIndicator">
+        <item name="android:animationDuration">500</item> <!-- Длительность анимации в миллисекундах -->
+    </style>
 </resources>

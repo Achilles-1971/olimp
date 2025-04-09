@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
+    android:foreground="?android:attr/selectableItemBackground"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="6dp"
+    app:cardBackgroundColor="@android:color/white">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp">
+
+        <!-- Увеличенное превью мероприятия -->
+        <ImageView
+            android:id="@+id/ivPreview"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:scaleType="centerCrop"
+            android:clipToOutline="true"
+            android:background="@drawable/rounded_image"
+            android:contentDescription="Превью мероприятия"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:src="@drawable/ic_placeholder" />
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"
+            android:text="Название мероприятия"
+            android:textStyle="bold"
+            android:textColor="#D4AF37"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="12sp"
+            android:autoSizeMaxTextSize="20sp"
+            android:autoSizeStepGranularity="2sp"
+            app:layout_constraintTop_toTopOf="@id/ivPreview"
+            app:layout_constraintStart_toEndOf="@id/ivPreview"
+            app:layout_constraintEnd_toStartOf="@id/btnDetails" />
+
+        <!-- Статус мероприятия -->
+        <LinearLayout
+            android:id="@+id/statusLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/status_background"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle"
+            app:layout_constraintStart_toStartOf="@id/tvTitle">
+
+            <ImageView
+                android:id="@+id/ivStatusIcon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center_vertical"
+                android:src="@android:drawable/ic_menu_recent_history"
+                android:contentDescription="Статус мероприятия" />
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="Активно"
+                android:textSize="12sp"
+                android:textColor="#D4AF37"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:layout_gravity="center_vertical" />
+        </LinearLayout>
+
+        <!-- Даты проведения -->
+        <TextView
+            android:id="@+id/tvDates"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="01.01.2025  02.01.2025"
+            android:textSize="14sp"
+            android:textColor="#D4AF37"
+            app:layout_constraintTop_toBottomOf="@id/statusLayout"
+            app:layout_constraintStart_toStartOf="@id/tvTitle"
+            app:layout_constraintEnd_toEndOf="@id/tvTitle" />
+
+        <!-- Прогресс-бар -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="0dp"
+            android:layout_height="4dp"
+            android:layout_marginTop="8dp"
+            android:max="100"
+            android:progress="50"
+            android:progressTint="#FFC107"
+            android:progressBackgroundTint="#E0E0E0"
+            app:layout_constraintTop_toBottomOf="@id/tvDates"
+            app:layout_constraintStart_toStartOf="@id/tvDates"
+            app:layout_constraintEnd_toEndOf="@id/tvDates" />
+
+        <!-- Блок статистики (просмотры и комментарии) -->
+        <LinearLayout
+            android:id="@+id/statsLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/ivPreview"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ImageView
+                android:id="@+id/ivViewsIcon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center_vertical"
+                app:tint="#D4AF37"
+                android:src="@drawable/ic_eye"
+                android:contentDescription="Иконка просмотров" />
+
+            <TextView
+                android:id="@+id/tvViews"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="0"
+                android:textSize="12sp"
+                android:textColor="#D4AF37" />
+
+            <ImageView
+                android:id="@+id/ivCommentsIcon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="12dp"
+                android:layout_gravity="center_vertical"
+                app:tint="#D4AF37"
+                android:src="@drawable/ic_send"
+                android:contentDescription="Иконка комментариев" />
+
+            <TextView
+                android:id="@+id/tvComments"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="0"
+                android:textSize="12sp"
+                android:textColor="#D4AF37" />
+        </LinearLayout>
+
+        <!-- Кнопка удаления -->
+        <ImageButton
+            android:id="@+id/btnDelete"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#F44336"
+            android:contentDescription="Удалить мероприятие"
+            android:src="@android:drawable/ic_menu_delete"
+            app:layout_constraintBottom_toBottomOf="@id/statsLayout"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Кнопка деталей -->
+        <ImageButton
+            android:id="@+id/btnDetails"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#424242"
+            android:contentDescription="Перейти к деталям мероприятия"
+            android:src="@drawable/ic_reply2"
+            app:layout_constraintEnd_toStartOf="@id/btnDelete"
+            app:layout_constraintBottom_toBottomOf="@id/btnDelete"
+            app:layout_constraintVertical_bias="0.5" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

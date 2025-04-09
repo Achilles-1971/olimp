@@ -3,116 +3,280 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp">
+        android:fillViewport="true">
 
-        <!-- Поле для названия мероприятия -->
-        <EditText
-            android:id="@+id/etTitle"
-            android:layout_width="0dp"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Название мероприятия"
-            android:minHeight="48dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            android:padding="16dp">
 
-        <!-- Поле для описания -->
-        <EditText
-            android:id="@+id/etDescription"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="Описание"
-            android:minHeight="48dp"
-            app:layout_constraintTop_toBottomOf="@id/etTitle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            <!-- Поле для названия мероприятия -->
+            <EditText
+                android:id="@+id/etTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_input_field"
+                android:fontFamily="sans-serif-light"
+                android:hint="Название мероприятия"
+                android:inputType="text"
+                android:minHeight="48dp"
+                android:padding="12dp"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- Поле для даты начала -->
-        <EditText
-            android:id="@+id/etStartDate"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="Дата начала (ISO формат)"
-            android:minHeight="48dp"
-            app:layout_constraintTop_toBottomOf="@id/etDescription"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            <!-- Поле для подзаголовка -->
+            <EditText
+                android:id="@+id/etSubheader"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_input_field"
+                android:fontFamily="sans-serif-light"
+                android:hint="Подзаголовок"
+                android:inputType="text"
+                android:minHeight="48dp"
+                android:padding="12dp"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/etTitle" />
 
-        <!-- Поле для даты окончания -->
-        <EditText
-            android:id="@+id/etEndDate"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="Дата окончания (ISO формат)"
-            android:minHeight="48dp"
-            app:layout_constraintTop_toBottomOf="@id/etStartDate"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            <!-- Поле для описания -->
+            <EditText
+                android:id="@+id/etDescription"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_input_field"
+                android:fontFamily="sans-serif-light"
+                android:hint="Описание"
+                android:inputType="textMultiLine"
+                android:minHeight="48dp"
+                android:padding="12dp"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/etSubheader" />
 
-        <!-- Поле для адреса -->
-        <EditText
-            android:id="@+id/etAddress"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="Адрес"
-            android:minHeight="48dp"
-            app:layout_constraintTop_toBottomOf="@id/etEndDate"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            <!-- Поле для даты начала -->
+            <EditText
+                android:id="@+id/etStartDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_input_field"
+                android:digits="0123456789. :"
+                android:fontFamily="sans-serif-light"
+                android:hint="Дата начала (дд.MM.гггг чч:mm)"
+                android:inputType="text"
+                android:minHeight="48dp"
+                android:padding="12dp"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toStartOf="@id/btnStartDatePicker"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/etDescription" />
 
-        <!-- ImageView для отображения выбранного фото мероприятия (по желанию) -->
-        <ImageView
-            android:id="@+id/ivEventImage"
-            android:layout_width="0dp"
-            android:layout_height="200dp"
-            android:layout_marginTop="8dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_placeholder"
-            app:layout_constraintTop_toBottomOf="@id/etAddress"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            <!-- Кнопка для выбора даты начала -->
+            <ImageButton
+                android:id="@+id/btnStartDatePicker"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Выбрать дату начала"
+                android:src="@android:drawable/ic_menu_my_calendar"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/etDescription" />
 
-        <!-- Кнопка для выбора фото -->
-        <Button
-            android:id="@+id/btnAddPhoto"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Добавить фото"
-            android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@id/ivEventImage"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            <!-- Поле для даты окончания -->
+            <EditText
+                android:id="@+id/etEndDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_input_field"
+                android:digits="0123456789. :"
+                android:fontFamily="sans-serif-light"
+                android:hint="Дата окончания (дд.MM.гггг чч:mm)"
+                android:inputType="text"
+                android:minHeight="48dp"
+                android:padding="12dp"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toStartOf="@id/btnEndDatePicker"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/etStartDate" />
 
-        <!-- RecyclerView для списка миниатюр выбранных изображений -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvSelectedImages"
-            android:layout_width="0dp"
-            android:layout_height="100dp"
-            android:layout_marginTop="8dp"
-            android:clipToPadding="false"
-            android:padding="4dp"
-            app:layout_constraintTop_toBottomOf="@id/btnAddPhoto"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/btnCreateEvent" />
+            <!-- Кнопка для выбора даты окончания -->
+            <ImageButton
+                android:id="@+id/btnEndDatePicker"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Выбрать дату окончания"
+                android:src="@android:drawable/ic_menu_my_calendar"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/etStartDate" />
 
-        <!-- Кнопка для создания мероприятия -->
-        <Button
-            android:id="@+id/btnCreateEvent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Создать мероприятие"
-            android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@id/rvSelectedImages"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            <!-- Поле для адреса -->
+            <EditText
+                android:id="@+id/etAddress"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_input_field"
+                android:fontFamily="sans-serif-light"
+                android:hint="Адрес"
+                android:inputType="text"
+                android:minHeight="48dp"
+                android:padding="12dp"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toStartOf="@id/btnSelectLocation"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/etEndDate" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <!-- Кнопка с иконкой геолокации -->
+            <ImageButton
+                android:id="@+id/btnSelectLocation"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Выбрать местоположение"
+                android:src="@android:drawable/ic_menu_mylocation"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/etEndDate" />
+
+            <!-- MapView для отображения карты -->
+            <org.osmdroid.views.MapView
+                android:id="@+id/mapView"
+                android:layout_width="0dp"
+                android:layout_height="200dp"
+                android:layout_marginTop="12dp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/etAddress" />
+
+            <!-- TextView для отображения широты -->
+            <TextView
+                android:id="@+id/tvLatitude"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="Широта: не выбрано"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/mapView" />
+
+            <!-- TextView для отображения долготы -->
+            <TextView
+                android:id="@+id/tvLongitude"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="Долгота: не выбрано"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvLatitude" />
+
+            <!-- Поле для максимального количества участников -->
+            <EditText
+                android:id="@+id/etMaxParticipants"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_input_field"
+                android:fontFamily="sans-serif-light"
+                android:hint="Макс. участников (0 = без ограничений)"
+                android:inputType="number"
+                android:minHeight="48dp"
+                android:padding="12dp"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvLongitude" />
+
+            <!-- ImageView для отображения выбранного фото мероприятия -->
+            <ImageView
+                android:id="@+id/ivEventImage"
+                android:layout_width="0dp"
+                android:layout_height="200dp"
+                android:layout_marginTop="12dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_placeholder"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/etMaxParticipants" />
+
+            <!-- Кнопка для выбора фото -->
+            <Button
+                android:id="@+id/btnAddPhoto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Добавить фото"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/ivEventImage" />
+
+            <!-- Аннотация для выбора превью -->
+            <TextView
+                android:id="@+id/tvPreviewHint"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Нажмите на фото, чтобы выбрать его как превью"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/btnAddPhoto" />
+
+            <!-- RecyclerView для списка миниатюр выбранных изображений -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvSelectedImages"
+                android:layout_width="0dp"
+                android:layout_height="100dp"
+                android:layout_marginTop="8dp"
+                android:clipToPadding="false"
+                android:padding="4dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvPreviewHint" />
+
+            <!-- Кнопка для создания мероприятия -->
+            <Button
+                android:id="@+id/btnCreateEvent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                android:text="Создать мероприятие"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/rvSelectedImages" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
 </layout>

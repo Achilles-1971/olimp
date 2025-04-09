@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Закругление углов -->
+    <corners android:radius="12dp" />
+
+    <!-- Слегка желтоватый фон -->
+    <solid android:color="#FFF9E1" />
+
+    <!-- Тонкая обводка (чуть темнее для контраста) -->
+    <stroke
+        android:width="1dp"
+        android:color="#E8E0C8" />
+</shape>

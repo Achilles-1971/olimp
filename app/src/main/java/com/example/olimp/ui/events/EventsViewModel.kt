@@ -4,16 +4,19 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.olimp.data.models.CreateEventRequest
 import com.example.olimp.data.models.Event
 import com.example.olimp.data.models.EventPhotoResponse
 import com.example.olimp.data.repository.EventsRepository
+import com.example.olimp.network.ApiResponse
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import okhttp3.MultipartBody
 
 class EventsViewModel(private val repository: EventsRepository) : ViewModel() {
+
     private val _events = MutableLiveData<List<Event>>()
     val events: LiveData<List<Event>> get() = _events
 
@@ -27,7 +30,7 @@ class EventsViewModel(private val repository: EventsRepository) : ViewModel() {
 
     fun loadEvents(filter: String? = null) {
         Log.d("EventsViewModel", "🟢 loadEvents called with filter: $filter")
-        loadEventsJob?.cancel() // Отменяем предыдущий запрос
+        loadEventsJob?.cancel()
         loadEventsJob = viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -45,19 +48,23 @@ class EventsViewModel(private val repository: EventsRepository) : ViewModel() {
         }
     }
 
-    // Создание нового мероприятия
     fun createEvent(request: CreateEventRequest, onSuccess: (Event) -> Unit) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val createdEvent = repository.createEvent(request)
-                if (createdEvent != null) {
-                    onSuccess(createdEvent)
-                } else {
-                    _error.value = "Ошибка при создании мероприятия"
+                when (val response = repository.createEvent(request)) {
+                    is ApiResponse.Success -> {
+                        onSuccess(response.data)
+                    }
+                    is ApiResponse.Error -> {
+                        _error.value = "Ошибка ${response.code}: ${response.message}"
+                    }
+                    is ApiResponse.NetworkError -> {
+                        _error.value = "Ошибка сети. Проверьте подключение."
+                    }
                 }
             } catch (e: Exception) {
-                _error.value = e.message
+                _error.value = "Неизвестная ошибка: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
@@ -82,7 +89,29 @@ class EventsViewModel(private val repository: EventsRepository) : ViewModel() {
         }
     }
 
-    // Удаление мероприятия
+    fun updateEventPreview(eventId: Int, part: MultipartBody.Part, onSuccess: (Event) -> Unit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                when (val response = repository.updateEventPreview(eventId, part)) {
+                    is ApiResponse.Success -> {
+                        onSuccess(response.data)
+                    }
+                    is ApiResponse.Error -> {
+                        _error.value = "Ошибка загрузки превью: ${response.message ?: "Неизвестная ошибка"}"
+                    }
+                    is ApiResponse.NetworkError -> {
+                        _error.value = "Ошибка сети при загрузке превью"
+                    }
+                }
+            } catch (e: Exception) {
+                _error.value = "Ошибка загрузки превью: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     fun deleteEvent(eventId: Int, onSuccess: () -> Unit) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -98,6 +127,64 @@ class EventsViewModel(private val repository: EventsRepository) : ViewModel() {
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    fun registerForEvent(
+        eventId: Int,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val response = repository.registerForEvent(eventId)
+                if (response.isSuccessful) {
+                    onSuccess()
+                } else {
+                    val error = response.errorBody()?.string() ?: "Ошибка регистрации"
+                    onError(error)
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Неизвестная ошибка")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun cancelParticipation(
+        eventId: Int,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val response = repository.cancelParticipation(eventId)
+                if (response.isSuccessful) {
+                    onSuccess()
+                } else {
+                    val error = response.errorBody()?.string() ?: "Ошибка при отмене участия"
+                    onError(error)
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Неизвестная ошибка")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    class EventsViewModelFactory(
+        private val repository: EventsRepository
+    ) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(EventsViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return EventsViewModel(repository) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }

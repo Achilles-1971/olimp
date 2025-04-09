@@ -2,6 +2,7 @@ package com.example.olimp.ui.events
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -12,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.example.olimp.R
 import com.example.olimp.data.models.Comment
 import com.example.olimp.data.models.CommentRequest
@@ -30,6 +32,11 @@ import com.example.olimp.utils.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import java.util.TimeZone
 
 class EventDetailActivity : AppCompatActivity(), CommentsBottomSheetDialogFragment.CommentUpdateListener {
 
@@ -43,17 +50,19 @@ class EventDetailActivity : AppCompatActivity(), CommentsBottomSheetDialogFragme
     private var event: Event? = null
     private var totalComments: Int = 0
     private var replyingToCommentId: Int? = null
+    private var isRegistered: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityEventsDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         photoPagerAdapter = EventPhotoPagerAdapter(emptyList())
         binding.viewPagerPhotos.adapter = photoPagerAdapter
 
-
         eventId = intent.getIntExtra("EVENT_ID", 0)
         if (eventId == 0) {
+            Log.e("EventDetailActivity", "Invalid eventId received: $eventId. Check the push notification data.")
             Toast.makeText(this, getString(R.string.error_invalid_event_id), Toast.LENGTH_SHORT).show()
             finish()
             return
@@ -62,72 +71,272 @@ class EventDetailActivity : AppCompatActivity(), CommentsBottomSheetDialogFragme
         eventsRepository = EventsRepository(RetrofitInstance.getApi(this))
         commentRepository = CommentRepository(RetrofitInstance.getApi(this))
 
-        // Настройка адаптера для превью (только один комментарий)
+        // (1) Инициализация списка комментариев
         binding.rvCommentsPreview.layoutManager = LinearLayoutManager(this)
         flatCommentAdapter = FlatCommentAdapter(mutableListOf()) { flatComment, action ->
             when (action) {
                 "profile" -> openUserProfile(flatComment.comment.user?.id)
-                "like" -> toggleCommentLike(flatComment)
-                "delete" -> deleteComment(flatComment)
-                "reply" -> showCommentsBottomSheetWithReply(flatComment.comment.id)
-                "edit" -> openEditDialog(flatComment)
-                else -> {} // "expand" и "collapse" не используются в превью
+                "like"    -> toggleCommentLike(flatComment)
+                "delete"  -> deleteComment(flatComment)
+                "reply"   -> showCommentsBottomSheetWithReply(flatComment.comment.id)
+                "edit"    -> openEditDialog(flatComment)
             }
         }
         binding.rvCommentsPreview.adapter = flatCommentAdapter
-        binding.rvCommentsPreview.setOnClickListener(null) // Отключаем случайные клики
 
-        // Настройка поля ввода как триггера для Bottom Sheet
-        binding.llCommentInput.background = ContextCompat.getDrawable(this, R.drawable.comment_input_background)
-        binding.llCommentInput.clipToOutline = true
-        binding.etCommentInput.isEnabled = true // Делаем EditText кликабельным
-        binding.etCommentInput.keyListener = null // Отключаем ввод текста напрямую
-        binding.etCommentInput.setOnClickListener { showCommentsBottomSheet() }
-        binding.btnSendComment.visibility = View.GONE // Убираем кнопку отправки, так как она теперь в Bottom Sheet
-
-        // Загрузка данных и настройка интерфейса
-        loadEventDetails()
-        loadLatestComment()
-        registerViewIfNeeded()
-
-        binding.btnParticipate.setOnClickListener {
-            Toast.makeText(this, getString(R.string.participate_button_clicked, eventId), Toast.LENGTH_SHORT).show()
+        // (2) Тап по блоку «Написать комментарий...», открываем BottomSheet
+        //    (аналогично, если вы оставляете старый llCommentInput — тогда используйте именно его)
+        binding.llCommentInputPreview.setOnClickListener {
+            showCommentsBottomSheet()
         }
 
-        binding.tvCommentsHeader.setOnClickListener { showCommentsBottomSheet() }
+        binding.btnParticipate.setOnClickListener {
+            if (isEventFinished()) {
+                Toast.makeText(this, "Нельзя записаться на завершённое мероприятие", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (isRegistered) cancelParticipation() else participateInEvent()
+        }
+
+
+        // (4) Заголовок «Комментарии»
+        binding.tvCommentsHeader.setOnClickListener {
+            showCommentsBottomSheet()
+        }
+
+        // (5) Открыть адрес в картах
+        binding.btnOpenMap.setOnClickListener {
+            val address = binding.tvLocation.text.toString()
+            if (address == getString(R.string.address_not_specified)) {
+                Toast.makeText(this, getString(R.string.no_address_available), Toast.LENGTH_SHORT).show()
+            } else {
+                val uri = Uri.parse("geo:0,0?q=" + Uri.encode(address))
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                if (intent.resolveActivity(packageManager) != null) {
+                    startActivity(intent)
+                } else {
+                    Toast.makeText(this, getString(R.string.no_map_app), Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        // (6) Скопировать адрес
+        binding.btnCopyAddress.setOnClickListener {
+            val address = binding.tvLocation.text.toString()
+            if (address != getString(R.string.address_not_specified)) {
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                val clip = android.content.ClipData.newPlainText("address", address)
+                clipboard.setPrimaryClip(clip)
+                Toast.makeText(this, getString(R.string.address_copied), Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // (7) Сворачивание / разворачивание плашки «Подробности мероприятия»
+        //     Сначала скрываем контент (либо можно сделать «по умолчанию развернуто»)
+        var isDetailsExpanded = false
+        binding.detailsContent.visibility = View.GONE
+        binding.ivExpandIcon.setImageResource(android.R.drawable.arrow_down_float)
+
+        binding.detailsHeader.setOnClickListener {
+            isDetailsExpanded = !isDetailsExpanded
+            binding.detailsContent.visibility = if (isDetailsExpanded) View.VISIBLE else View.GONE
+            binding.ivExpandIcon.setImageResource(
+                if (isDetailsExpanded) android.R.drawable.arrow_up_float
+                else android.R.drawable.arrow_down_float
+            )
+        }
+
+        // Загружаем детали
+        loadEventDetails()
+        // Загружаем последний комментарий (превью)
+        loadLatestComment()
+        // Отмечаем просмотр (view) при необходимости
+        registerViewIfNeeded()
+
+        // Анимация кнопки «Участвовать»
+        binding.btnParticipate.postDelayed({
+            updateParticipateButton()
+        }, 300)
+    }
+
+
+
+    private fun updateParticipateButton() {
+        val button = binding.btnParticipate
+
+        if (isEventFinished()) {
+            button.isEnabled = false
+            button.text = "Мероприятие завершено"
+            button.backgroundTintList = ContextCompat.getColorStateList(this, R.color.gray)
+            return
+        }
+
+        val newText = if (isRegistered) getString(R.string.cancel_participation_button) else getString(R.string.participate_button)
+        val newColor = ContextCompat.getColorStateList(this, if (isRegistered) R.color.gray else R.color.gold)
+
+        button.animate()
+            .alpha(0f)
+            .scaleX(0.95f)
+            .scaleY(0.95f)
+            .setDuration(150)
+            .withEndAction {
+                button.text = newText
+                button.backgroundTintList = newColor
+                button.animate()
+                    .alpha(1f)
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(150)
+                    .start()
+            }
+            .start()
+    }
+
+
+    private fun temporarilyDisableParticipateButton(durationMillis: Long = 1500L) {
+        binding.btnParticipate.isEnabled = false
+        binding.btnParticipate.postDelayed({
+            binding.btnParticipate.isEnabled = true
+        }, durationMillis)
+    }
+
+    private fun participateInEvent() {
+        temporarilyDisableParticipateButton() // ← 🔒 блокируем на старте
+        lifecycleScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    eventsRepository.registerForEvent(eventId)
+                }
+                if (response.code() == 201 || response.code() == 200) {
+                    isRegistered = true
+                    updateParticipateButton()
+                    Toast.makeText(this@EventDetailActivity, R.string.registered_successfully, Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@EventDetailActivity, getString(R.string.error_code, response.code()), Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@EventDetailActivity, getString(R.string.error, e.message), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun cancelParticipation() {
+        temporarilyDisableParticipateButton()
+        lifecycleScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    eventsRepository.cancelParticipation(eventId)
+                }
+                if (response.isSuccessful) {
+                    isRegistered = false
+                    updateParticipateButton()
+                    Toast.makeText(this@EventDetailActivity, R.string.cancelled_successfully, Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@EventDetailActivity, getString(R.string.error_code, response.code()), Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@EventDetailActivity, getString(R.string.error, e.message), Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun loadEventDetails() {
         lifecycleScope.launch {
             binding.progressBarComments.visibility = View.VISIBLE
             try {
-                event = withContext(Dispatchers.IO) {
-                    eventsRepository.getEventById(eventId)
-                }
+                event = withContext(Dispatchers.IO) { eventsRepository.getEventById(eventId) }
+                event?.let { evt ->
+                    isRegistered = evt.isRegistered == true
+                    binding.tvTitle.text = evt.title
 
-                if (event != null) {
-                    binding.tvTitle.text = event!!.title
-                    binding.tvFullContent.text = event!!.description ?: getString(R.string.no_description)
-                    binding.tvViews.text = getString(R.string.views_count, event!!.viewsCount ?: 0)
-
-                    // ⬇️ Подключаем фото
-                    event!!.photos?.let { photoPagerAdapter.setData(it) }
-
-                    if (!event!!.subheader.isNullOrEmpty()) {
-                        binding.tvSubheader.visibility = View.VISIBLE
-                        binding.tvSubheader.text = event!!.subheader
+                    val rawDescription = evt.description ?: getString(R.string.no_description)
+                    val escaped = android.text.Html.escapeHtml(rawDescription)
+                    val displayed = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                        android.text.Html.fromHtml(escaped, android.text.Html.FROM_HTML_MODE_LEGACY)
                     } else {
-                        binding.tvSubheader.visibility = View.GONE
+                        @Suppress("DEPRECATION")
+                        android.text.Html.fromHtml(escaped)
                     }
-                } else {
-                    Toast.makeText(this@EventDetailActivity, getString(R.string.error_loading_event_details), Toast.LENGTH_SHORT).show()
+                    binding.tvFullContent.text = displayed
+
+                    binding.tvViews.text = getString(R.string.views_count, evt.viewsCount ?: 0)
+                    photoPagerAdapter.setData(evt.photos ?: emptyList())
+
+                    binding.tvSubheader.visibility = if (evt.subheader.isNullOrEmpty()) View.GONE else View.VISIBLE
+                    binding.tvSubheader.text = evt.subheader
+
+                    val address = if (!evt.address.isNullOrBlank()) evt.address else getString(R.string.address_not_specified)
+                    binding.tvLocation.text = address
+
+                    binding.tvMaxParticipants.text = "Макс. участников: ${evt.maxParticipants ?: 0}"
+
+                    // Форматирование дат через OffsetDateTime
+                    val inputFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+                    val outputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+
+                    // Начало
+                    try {
+                        evt.startDatetime?.let { start ->
+                            val parsed = OffsetDateTime.parse(start, inputFormatter)
+                            binding.tvStartDate.text = "Начало: ${parsed.format(outputFormatter)}"
+                        } ?: run {
+                            binding.tvStartDate.text = "Начало: Не указано"
+                        }
+                    } catch (e: Exception) {
+                        Log.e("EventDetail", "Ошибка парсинга startDatetime: ${e.message}")
+                        binding.tvStartDate.text = "Начало: Ошибка формата"
+                    }
+
+                    // Окончание
+                    try {
+                        evt.endDatetime?.let { end ->
+                            val parsed = OffsetDateTime.parse(end, inputFormatter)
+                            binding.tvEndDate.text = "Окончание: ${parsed.format(outputFormatter)}"
+                        } ?: run {
+                            binding.tvEndDate.text = "Окончание: Не указано"
+                        }
+                    } catch (e: Exception) {
+                        Log.e("EventDetail", "Ошибка парсинга endDatetime: ${e.message}")
+                        binding.tvEndDate.text = "Окончание: Ошибка формата"
+                    }
+
+                    // Организатор
+                    evt.organizer?.let { org ->
+                        binding.tvOrganizerName.text = org.username ?: "Неизвестный организатор"
+                        org.avatar?.let { avatarUrl ->
+                            Glide.with(this@EventDetailActivity)
+                                .load(avatarUrl)
+                                .placeholder(R.drawable.ic_profile)
+                                .into(binding.ivOrganizerAvatar)
+                        } ?: run {
+                            binding.ivOrganizerAvatar.setImageResource(R.drawable.ic_profile)
+                        }
+                        binding.organizerLayout.setOnClickListener {
+                            openUserProfile(org.id)
+                        }
+                    } ?: run {
+                        binding.tvOrganizerName.text = "Организатор не указан"
+                        binding.organizerLayout.isClickable = false
+                    }
                 }
             } catch (e: Exception) {
-                Log.e("EventDetail", "Error loading event details: ${e.message}")
+                Log.e("EventDetail", "Ошибка загрузки деталей мероприятия: ${e.message}")
                 Toast.makeText(this@EventDetailActivity, getString(R.string.error, e.message), Toast.LENGTH_SHORT).show()
             } finally {
                 binding.progressBarComments.visibility = View.GONE
             }
+        }
+    }
+
+    private fun isEventFinished(): Boolean {
+        val end = event?.endDatetime ?: return false
+        return try {
+            val endTime = OffsetDateTime.parse(end, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+            endTime.isBefore(OffsetDateTime.now())
+        } catch (e: Exception) {
+            Log.e("EventDetail", "Ошибка парсинга endDatetime в isEventFinished: ${e.message}")
+            false
         }
     }
 
@@ -138,7 +347,6 @@ class EventDetailActivity : AppCompatActivity(), CommentsBottomSheetDialogFragme
         val viewPrefs = getSharedPreferences("views", Context.MODE_PRIVATE)
         val viewKey = "viewed_event_$eventId"
 
-        // Если уже зарегистрирован просмотр, выходим из метода
         if (viewPrefs.getBoolean(viewKey, false)) {
             Log.d("EventDetail", "View already registered for eventId=$eventId")
             return
@@ -148,23 +356,21 @@ class EventDetailActivity : AppCompatActivity(), CommentsBottomSheetDialogFragme
             try {
                 val response = withContext(Dispatchers.IO) { eventsRepository.addView(eventId) }
                 if (response.isSuccessful && response.body() != null) {
-                    binding.tvViews.text = getString(R.string.views_count, response.body()!!.viewsCount)
-                    // Сохраняем факт регистрации просмотра
+                    val viewsCount = response.body()!!.viewsCount
+                    binding.tvViews.text = getString(R.string.views_count, viewsCount)
                     viewPrefs.edit().putBoolean(viewKey, true).apply()
                     Log.d("EventDetail", "View registered for eventId=$eventId, userId=$userId")
                 } else {
-                    binding.tvViews.text = getString(R.string.views_count, event?.viewsCount ?: 0)
-                    Log.d("EventDetail", "Failed to register view, using cached count for eventId=$eventId")
+                    Log.d("EventDetail", "Failed to register view, code=${response.code()}")
                 }
             } catch (e: Exception) {
                 Log.e("EventDetail", "Error registering view: ${e.message}")
-                binding.tvViews.text = getString(R.string.views_count, event?.viewsCount ?: 0)
             }
         }
     }
 
-
     private fun loadLatestComment() {
+        Log.d("EventDetailActivity", "loadLatestComment called")
         lifecycleScope.launch {
             binding.progressBarComments.visibility = View.VISIBLE
             try {
@@ -172,19 +378,22 @@ class EventDetailActivity : AppCompatActivity(), CommentsBottomSheetDialogFragme
                 if (response.isSuccessful && response.body() != null) {
                     val paginatedResponse = response.body()!!
                     totalComments = paginatedResponse.count
+                    binding.tvCommentsHeader.text = getString(R.string.comments_header, totalComments)
                     if (paginatedResponse.results.isNotEmpty()) {
                         val latestComment = paginatedResponse.results.first()
-                        flatCommentAdapter.updateData(listOf(FlatComment(latestComment, 0)))
-                        binding.tvCommentsHeader.text = getString(R.string.comments_header, totalComments)
+                        val newList = listOf(FlatComment(latestComment, 0))
+                        Log.d("EventDetailActivity", "loadLatestComment updating with: $newList")
+                        flatCommentAdapter.updateData(newList)
                         binding.tvEmptyComments.visibility = View.GONE
                         binding.rvCommentsPreview.visibility = View.VISIBLE
                     } else {
+                        Log.d("EventDetailActivity", "loadLatestComment: no comments")
                         flatCommentAdapter.updateData(emptyList())
-                        binding.tvCommentsHeader.text = getString(R.string.write_comment)
                         binding.tvEmptyComments.visibility = View.VISIBLE
                         binding.rvCommentsPreview.visibility = View.GONE
                     }
                 } else {
+                    Log.d("EventDetailActivity", "loadLatestComment: failed response")
                     flatCommentAdapter.updateData(emptyList())
                     binding.tvCommentsHeader.text = getString(R.string.write_comment)
                     binding.tvEmptyComments.visibility = View.VISIBLE
@@ -355,11 +564,24 @@ class EventDetailActivity : AppCompatActivity(), CommentsBottomSheetDialogFragme
     }
 
     override fun onCommentAdded(newComment: Comment) {
+        Log.d("EventDetailActivity", "onCommentAdded called with comment: $newComment")
         totalComments++
         binding.tvCommentsHeader.text = getString(R.string.comments_header, totalComments)
         binding.tvEmptyComments.visibility = View.GONE
         binding.rvCommentsPreview.visibility = View.VISIBLE
-        flatCommentAdapter.updateData(listOf(FlatComment(newComment, 0)))
+
+        val currentComments = flatCommentAdapter.getCurrentList().toMutableList()
+        Log.d("EventDetailActivity", "Before adding: size=${currentComments.size}, comments=$currentComments")
+        currentComments.add(0, FlatComment(newComment, 0))
+        Log.d("EventDetailActivity", "After adding: size=${currentComments.size}, comments=$currentComments")
+
+        // Убираем updateData с DiffUtil, заменяем на прямое обновление
+        flatCommentAdapter.getCurrentList().clear()
+        flatCommentAdapter.getCurrentList().addAll(currentComments)
+        flatCommentAdapter.notifyItemInserted(0)
+        binding.rvCommentsPreview.layoutManager?.scrollToPosition(0)
+        binding.rvCommentsPreview.requestLayout()
+        Log.d("EventDetailActivity", "UI updated, adapter size=${flatCommentAdapter.itemCount}")
     }
 
     override fun onCommentUpdated(updatedComment: Comment, position: Int) {

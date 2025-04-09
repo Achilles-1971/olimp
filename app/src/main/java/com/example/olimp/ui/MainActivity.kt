@@ -7,28 +7,33 @@ import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
-import androidx.drawerlayout.widget.DrawerLayout
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.databinding.DataBindingUtil
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.example.olimp.R
 import com.example.olimp.data.models.UserResponse
 import com.example.olimp.data.repository.AuthRepository
 import com.example.olimp.databinding.ActivityMainBinding
 import com.example.olimp.network.ApiService
+import com.example.olimp.network.RetrofitInstance
+import com.example.olimp.ui.events.EventsFragment
+import com.example.olimp.ui.events.MyEventsActivity
+import com.example.olimp.ui.friends.FindFriendsActivity
+import com.example.olimp.ui.friends.FriendsActivity
+import com.example.olimp.ui.notifications.NotificationsActivity
 import com.example.olimp.utils.SessionManager
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.imageview.ShapeableImageView
-import com.google.android.material.navigation.NavigationView
+import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import com.example.olimp.ui.events.EventsFragment
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
+import com.example.olimp.ui.messages.MessagesFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -42,14 +47,10 @@ class MainActivity : AppCompatActivity() {
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         sessionManager = SessionManager(this)
-
-        // Настраиваем Retrofit
-        val retrofit = Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8000/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        val apiService = retrofit.create(ApiService::class.java)
         authRepository = AuthRepository()
+
+        // 🔔 Запрашиваем разрешение на уведомления (Android 13+)
+        requestNotificationPermissionIfNeeded()
 
         Log.d("MainActivity", "🟢 MainActivity onCreate started")
 
@@ -58,6 +59,7 @@ class MainActivity : AppCompatActivity() {
                 Log.d("MainActivity", "🔴 User not logged in, redirecting to Login")
                 redirectToLogin()
             } else {
+                registerFcmTokenIfNeeded() // Проверяем и отправляем токен только если нужно
                 val email = sessionManager.getUserEmail()
                 if (email == null || !authRepository.isUserExists(email)) {
                     Log.d("MainActivity", "🔴 Email null or user not exists, clearing session")
@@ -67,6 +69,39 @@ class MainActivity : AppCompatActivity() {
                     initUI(savedInstanceState)
                     loadCurrentUserData()
                 }
+            }
+        }
+    }
+
+    private fun registerFcmTokenIfNeeded() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                val savedToken = sessionManager.getFcmToken()
+
+                // Отправляем токен, если он новый или изменился
+                if (savedToken != token) {
+                    Log.d("FCM_TOKEN", "Токен устройства: $token")
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val apiService: ApiService = RetrofitInstance.getApi(this@MainActivity)
+                            val response = apiService.registerFcmToken(ApiService.FcmTokenRequest(token))
+                            if (response.isSuccessful) {
+                                val message = response.body()?.message
+                                Log.d("FCM_TOKEN", "✅ Ответ сервера: $message")
+                                sessionManager.saveFcmToken(token) // Сохраняем токен
+                            } else {
+                                Log.e("FCM_TOKEN", "❌ Ошибка отправки токена: ${response.code()} - ${response.errorBody()?.string()}")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("FCM_TOKEN", "⚠️ Ошибка сети: ${e.message}", e)
+                        }
+                    }
+                } else {
+                    Log.d("FCM_TOKEN", "ℹ️ Токен уже актуален: $token")
+                }
+            } else {
+                Log.e("FCM_TOKEN", "❌ Ошибка получения токена: ${task.exception}")
             }
         }
     }
@@ -96,7 +131,7 @@ class MainActivity : AppCompatActivity() {
 
         val headerView = binding.navView.getHeaderView(0)
         val tvProfileNickname = headerView.findViewById<TextView>(R.id.tvProfileNickname)
-        val ivProfileAvatar = headerView.findViewById<ShapeableImageView>(R.id.ivProfileAvatar)
+        val ivProfileAvatar = headerView.findViewById<com.google.android.material.imageview.ShapeableImageView>(R.id.ivProfileAvatar)
         tvProfileNickname.text = user.username ?: "Username"
 
         val avatarUrl = if (!user.avatar.isNullOrEmpty() && user.avatar.startsWith("/media/")) {
@@ -122,7 +157,6 @@ class MainActivity : AppCompatActivity() {
         Log.d("MainActivity", "🟢 Initializing UI")
 
         if (savedInstanceState == null) {
-            // Временно устанавливаем EventsFragment для проверки
             replaceFragment(EventsFragment())
             binding.bottomNav.selectedItemId = R.id.nav_events
             binding.tvTitle.text = "События"
@@ -180,6 +214,18 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, MyEventsActivity::class.java))
                     Log.d("MainActivity", "🟢 Drawer: Started MyEventsActivity")
                 }
+                R.id.nav_notifications -> {
+                    startActivity(Intent(this, NotificationsActivity::class.java))
+                    Log.d("MainActivity", "🟢 Drawer: Started NotificationsActivity")
+                }
+                R.id.nav_friends -> {
+                    startActivity(Intent(this, FriendsActivity::class.java))
+                    Log.d("MainActivity", "🟢 Drawer: Started FriendsActivity")
+                }
+                R.id.nav_find_friends -> {
+                    startActivity(Intent(this, FindFriendsActivity::class.java))
+                    Log.d("MainActivity", "🟢 Drawer: Started FindFriendsActivity")
+                }
                 R.id.nav_logout -> {
                     sessionManager.clearSession()
                     redirectToLogin()
@@ -203,5 +249,23 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
         Log.d("MainActivity", "🟢 Redirected to LoginActivity")
+    }
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Log.d("PERMISSION", "✅ Разрешение на уведомления получено")
+        } else {
+            Log.w("PERMISSION", "⚠️ Разрешение на уведомления отклонено пользователем")
+        }
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
     }
 }

@@ -62,8 +62,10 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        if (context is CommentUpdateListener) {
-            commentUpdateListener = context
+        commentUpdateListener = try {
+            context as CommentUpdateListener
+        } catch (e: ClassCastException) {
+            throw ClassCastException("$context must implement CommentUpdateListener")
         }
     }
 
@@ -337,6 +339,8 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
         Log.d("CommentsBottomSheet", "Collapsed: removed child comments, added showPlaceholder.")
     }
 
+    private var commentWasAdded = false
+
     private fun sendComment() {
         val content = etCommentInput.text.toString().trim()
         if (content.isEmpty()) {
@@ -363,23 +367,45 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                 val response = withContext(Dispatchers.IO) {
                     commentRepository.createComment(request)
                 }
+
                 if (response.isSuccessful) {
-                    val newComment = response.body()
-                    if (newComment != null) {
-                        fullComments = updateCommentTree(fullComments, newComment)
-                        flatCommentAdapter.updateData(flattenComments(fullComments))
-                        etCommentInput.text.clear()
-                        replyingToCommentId = null
-                        updateCommentInputHint()
-                        totalComments++
-                        updateEmptyState()
-                        Toast.makeText(requireContext(), "Комментарий отправлен", Toast.LENGTH_SHORT).show()
-                        commentUpdateListener?.onCommentAdded(newComment)
+                    val commentsList = response.body()
+                    Log.d("CommentsBottomSheet", "Server response: $commentsList")
+
+                    if (!commentsList.isNullOrEmpty()) {
+                        val currentUserId = SessionManager(requireContext()).getUserId()
+                        val newComment = commentsList.find {
+                            it.content == content && it.user?.id == currentUserId
+                        }
+
+                        if (newComment != null) {
+                            Log.d("CommentsBottomSheet", "New comment found: $newComment")
+                            fullComments = updateCommentTreeSafe(fullComments, newComment)
+                            flatCommentAdapter.updateData(flattenComments(fullComments))
+                            etCommentInput.text.clear()
+                            replyingToCommentId = null
+                            updateCommentInputHint()
+                            totalComments++
+                            updateEmptyState()
+                            Toast.makeText(requireContext(), "Комментарий отправлен", Toast.LENGTH_SHORT).show()
+                            commentWasAdded = true
+                            commentUpdateListener?.onCommentAdded(newComment)
+                        } else {
+                            Log.w("CommentsBottomSheet", "New comment not found in response, refreshing full list")
+                            fullComments = commentsList
+                            flatCommentAdapter.updateData(flattenComments(fullComments))
+                            totalComments = commentsList.size
+                            updateEmptyState()
+                        }
+                    } else {
+                        Log.e("CommentsBottomSheet", "Response body is empty")
+                        Toast.makeText(requireContext(), "Ошибка: ответ сервера пуст", Toast.LENGTH_SHORT).show()
                     }
                 } else {
                     handleApiError(response.code())
                 }
             } catch (e: Exception) {
+                Log.e("CommentsBottomSheet", "Exception in sendComment: ${e.message}", e)
                 Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
             } finally {
                 progressBarComments.visibility = View.GONE
@@ -387,11 +413,18 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
-    private fun updateCommentTree(comments: List<Comment>, newComment: Comment): List<Comment> {
+
+    private fun updateCommentTreeSafe(comments: List<Comment>, newComment: Comment): List<Comment> {
+        // если корневой — просто добавляем
+        if (newComment.parentCommentId == null) {
+            return listOf(newComment) + comments
+        }
+
+        // иначе рекурсивно вставляем в нужное место
         return comments.map { old ->
             when {
                 old.id == newComment.id -> {
-                    newComment.copy(children = updateCommentTree(old.children, newComment))
+                    newComment.copy(children = updateCommentTreeSafe(old.children, newComment))
                 }
                 old.id == newComment.parentCommentId -> {
                     if (old.children.none { it.id == newComment.id }) {
@@ -399,23 +432,26 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                     } else old
                 }
                 else -> {
-                    old.copy(children = updateCommentTree(old.children, newComment))
+                    old.copy(children = updateCommentTreeSafe(old.children, newComment))
                 }
             }
         }
     }
+
 
     private var isLoading = false
 
     private fun loadComments(page: Int = 1) {
         if (isLoading) return
         isLoading = true
+
         CoroutineScope(Dispatchers.Main).launch {
             progressBarComments.visibility = View.VISIBLE
             try {
                 val response = withContext(Dispatchers.IO) {
                     commentRepository.getComments(entityType, entityId, page)
                 }
+
                 if (response.isSuccessful) {
                     val paginatedResponse = response.body()
                     if (paginatedResponse != null) {
@@ -424,9 +460,15 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                         } else {
                             fullComments + paginatedResponse.results
                         }
-                        flatCommentAdapter.updateData(flattenComments(fullComments))
+
+                        val flatList = flattenComments(fullComments)
+                        flatCommentAdapter.updateData(flatList)
+
+                        Log.d("CommentsLoader", "📦 Загружено ${flatList.size} комментариев (page=$page)")
+
                         totalComments = paginatedResponse.count
                         currentPage = page
+
                         updateEmptyState()
                         autoLoadMoreIfNeeded()
                     }
@@ -434,13 +476,15 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                     handleApiError(response.code())
                 }
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("CommentsLoader", "❌ Ошибка загрузки: ${e.message}", e)
+                Toast.makeText(requireContext(), "Ошибка загрузки комментариев", Toast.LENGTH_SHORT).show()
             } finally {
                 progressBarComments.visibility = View.GONE
                 isLoading = false
             }
         }
     }
+
 
     private fun autoLoadMoreIfNeeded() {
         recyclerView.post {
@@ -527,7 +571,7 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                             } else item
                         }
                         flatCommentAdapter.updateData(updatedList)
-                        fullComments = updateCommentTree(fullComments, updatedComment)
+                        fullComments = updateCommentTreeSafe(fullComments, updatedComment)
                         Toast.makeText(requireContext(), "Комментарий обновлён", Toast.LENGTH_SHORT).show()
                         commentUpdateListener?.onCommentUpdated(updatedComment, position)
                     }
@@ -594,7 +638,7 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                             } else item
                         }
                         flatCommentAdapter.updateData(updatedList)
-                        fullComments = updateCommentTree(fullComments, updatedComment)
+                        fullComments = updateCommentTreeSafe(fullComments, updatedComment)
                         commentUpdateListener?.onCommentLiked(updatedComment, position)
                     }
                 } else {

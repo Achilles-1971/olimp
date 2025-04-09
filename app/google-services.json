@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "770056052301",
+    "project_id": "olimpapp-8abbc",
+    "storage_bucket": "olimpapp-8abbc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:770056052301:android:7849cb3de12bd914990604",
+        "android_client_info": {
+          "package_name": "com.example.olimp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCC_S3kK1S0cjIIHoHKHQaU53NuxhgFt2U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

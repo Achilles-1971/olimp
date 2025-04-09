@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- Ярко-жёлтый фон -->
+    <solid android:color="#FFEB3B" />
+    <!-- Скруглённые углы -->
+    <corners android:radius="8dp" />
+    <!-- Внутренние отступы, чтобы текст не прилипал к краям -->
+    <padding
+        android:left="8dp"
+        android:top="4dp"
+        android:right="8dp"
+        android:bottom="4dp" />
+</shape>

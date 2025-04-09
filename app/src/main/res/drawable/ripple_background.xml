@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#33FFC107">
+    <!-- Базовый фон с закруглёнными углами -->
+    <item>
+        <shape>
+            <corners android:radius="12dp" />
+            <solid android:color="#FFF9E1" />
+        </shape>
+    </item>
+</ripple>

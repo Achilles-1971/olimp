@@ -4,7 +4,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient">
 
     <!-- Прокручиваемая часть экрана -->
     <androidx.core.widget.NestedScrollView
@@ -27,6 +28,7 @@
                 android:id="@+id/viewPagerPhotos"
                 android:layout_width="0dp"
                 android:layout_height="250dp"
+                android:clipToOutline="true"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
@@ -48,51 +50,237 @@
                 android:id="@+id/tvTitle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:padding="8dp"
+                android:layout_marginTop="16dp"
                 android:textColor="@android:color/black"
-                android:textSize="22sp"
+                android:textSize="24sp"
                 android:textStyle="bold"
                 app:layout_constraintTop_toBottomOf="@id/indicator"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="Название мероприятия" />
 
-            <!-- (4) Подзаголовок (адрес, время и т.д.) -->
+            <!-- (4) Подзаголовок -->
             <TextView
                 android:id="@+id/tvSubheader"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:padding="8dp"
+                android:layout_marginTop="8dp"
                 android:textSize="16sp"
                 android:textColor="@android:color/darker_gray"
                 android:visibility="gone"
                 app:layout_constraintTop_toBottomOf="@id/tvTitle"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="Подзаголовок" />
 
-            <!-- (5) Описание мероприятия -->
-            <TextView
-                android:id="@+id/tvFullContent"
+            <!-- (4.2) Организатор -->
+            <LinearLayout
+                android:id="@+id/organizerLayout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="12dp"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="horizontal"
                 android:padding="8dp"
-                android:scrollbars="vertical"
-                android:textColor="@android:color/black"
-                android:textSize="16sp"
                 app:layout_constraintTop_toBottomOf="@id/tvSubheader"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <ImageView
+                    android:id="@+id/ivOrganizerAvatar"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="12dp"
+                    android:background="@drawable/bg_avatar_circle"
+                    android:clipToOutline="true"
+                    android:contentDescription="Аватар организатора"
+                    android:scaleType="centerCrop"
+                    tools:src="@drawable/ic_profile" />
+
+                <TextView
+                    android:id="@+id/tvOrganizerName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="Организатор"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- (5) Плашка "Подробности мероприятия" -->
+            <LinearLayout
+                android:id="@+id/detailsLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/rounded_card_background"
+                android:elevation="4dp"
+                android:orientation="vertical"
+                app:layout_constraintTop_toBottomOf="@id/organizerLayout"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <!-- Заголовок плашки с эффектом нажатия -->
+                <LinearLayout
+                    android:id="@+id/detailsHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/ripple_background"
+                    android:orientation="horizontal"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:id="@+id/tvDetailsHeader"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/details_header"
+                        android:textColor="@color/text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:id="@+id/ivExpandIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:contentDescription="@string/expand_collapse_desc"
+                        android:src="@drawable/ic_expand"
+                        android:rotation="0" />
+                </LinearLayout>
+
+                <!-- Содержимое плашки с плавным раскрытием -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/detailsContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    android:padding="12dp"
+                    android:background="@android:color/transparent">
+
+                    <!-- Даты с иконками -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/datesLayout"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent">
+
+                        <TextView
+                            android:id="@+id/tvStartDate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:drawableStart="@drawable/ic_calendar"
+                            android:drawablePadding="8dp"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_primary"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            tools:text="Начало: 01.01.2025 12:00" />
+
+                        <TextView
+                            android:id="@+id/tvEndDate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:drawableStart="@drawable/ic_calendar"
+                            android:drawablePadding="8dp"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_primary"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/tvStartDate"
+                            tools:text="Окончание: 01.01.2025 15:00" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <!-- Адрес с кнопками -->
+                    <LinearLayout
+                        android:id="@+id/addressLayout"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        android:padding="8dp"
+                        app:layout_constraintTop_toBottomOf="@id/datesLayout"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent">
+
+                        <TextView
+                            android:id="@+id/tvLocation"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:drawableStart="@drawable/ic_location"
+                            android:drawablePadding="8dp"
+                            android:maxLines="2"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            tools:text="Адрес не указан" />
+
+                        <ImageButton
+                            android:id="@+id/btnOpenMap"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/ripple_circle"
+                            android:contentDescription="@string/open_map_desc"
+                            android:src="@drawable/ic_map"
+                            android:padding="8dp" />
+
+                        <ImageButton
+                            android:id="@+id/btnCopyAddress"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/ripple_circle"
+                            android:contentDescription="@string/copy_address_desc"
+                            android:src="@drawable/ic_copy"
+                            android:padding="8dp" />
+                    </LinearLayout>
+
+                    <!-- Макс. участников -->
+                    <TextView
+                        android:id="@+id/tvMaxParticipants"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:drawableStart="@drawable/ic_group"
+                        android:drawablePadding="8dp"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        app:layout_constraintTop_toBottomOf="@id/addressLayout"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        tools:text="Макс. участников: 10" />
+
+                    <!-- Описание мероприятия -->
+                    <TextView
+                        android:id="@+id/tvFullContent"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:lineSpacingExtra="4dp"
+                        app:layout_constraintTop_toBottomOf="@id/tvMaxParticipants"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        tools:text="Описание мероприятия..." />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
 
             <!-- (6) Просмотры (иконка + текст) -->
             <LinearLayout
                 android:id="@+id/statsLayout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
+                android:padding="8dp"
                 android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/tvFullContent"
+                app:layout_constraintTop_toBottomOf="@id/detailsLayout"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
@@ -111,18 +299,18 @@
                     android:layout_gravity="center_vertical"
                     android:layout_marginStart="8dp"
                     android:text="Просмотры: 0"
-                    android:textColor="@android:color/black"
+                    android:textColor="@android:color/darker_gray"
                     android:textSize="14sp" />
             </LinearLayout>
 
-            <!-- (7) Кнопка "Участвовать" -->
+            <!-- (7) Кнопка "Участвовать" / "Отказаться" -->
             <Button
                 android:id="@+id/btnParticipate"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="48dp"
                 android:layout_marginTop="16dp"
                 android:backgroundTint="?attr/colorPrimary"
-                android:text="Участвовать"
+                android:text="@string/participate_button"
                 android:textColor="@android:color/white"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -134,7 +322,7 @@
                 android:id="@+id/progressBarComments"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="16dp"
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -145,7 +333,7 @@
                 android:id="@+id/tvCommentsHeader"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="16dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:minHeight="48dp"
@@ -154,19 +342,18 @@
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                app:layout_constraintTop_toBottomOf="@id/progressBarComments"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/progressBarComments" />
 
             <!-- (10) Превью списка комментариев -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvCommentsPreview"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="8dp"
                 android:maxHeight="200dp"
                 android:nestedScrollingEnabled="false"
-                android:padding="8dp"
                 app:layout_constraintTop_toBottomOf="@id/tvCommentsHeader"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
@@ -176,7 +363,7 @@
                 android:id="@+id/tvEmptyComments"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="8dp"
                 android:gravity="center"
                 android:text="Комментариев пока нет"
                 android:textColor="@android:color/darker_gray"
@@ -186,47 +373,48 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
+            <!-- Контейнер для фрагментов (профиль, etc.) -->
+            <FrameLayout
+                android:id="@+id/fragmentContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Панель ввода комментария, закреплённая снизу -->
+    <!-- Закреплённая панель ввода комментария (как в мероприятиях) -->
     <LinearLayout
-        android:id="@+id/llCommentInput"
+        android:id="@+id/llCommentInputPreview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
+        android:layout_margin="16dp"
         android:background="@drawable/comment_input_background"
         android:orientation="horizontal"
         android:padding="8dp"
-        android:clipToOutline="true">
+        android:clipToOutline="true"
+        android:elevation="4dp">
 
-        <EditText
-            android:id="@+id/etCommentInput"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Напишите комментарий..."
-            android:imeOptions="actionSend"
-            android:minHeight="48dp"
-            android:singleLine="true"
-            android:textColor="@android:color/black"
-            android:textSize="16sp" />
+        <ImageView
+            android:id="@+id/ivCommentIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:contentDescription="Написать комментарий"
+            android:src="@drawable/ic_send" />
 
-        <ImageButton
-            android:id="@+id/btnSendComment"
+        <TextView
+            android:id="@+id/tvCommentPrompt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Отправить комментарий"
-            android:src="@drawable/ic_send"
-            tools:ignore="TouchTargetSizeCheck" />
+            android:layout_marginStart="8dp"
+            android:text="@string/write_comment"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="16sp" />
     </LinearLayout>
-
-    <!-- Фрагмент контейнер -->
-    <FrameLayout
-        android:id="@+id/fragmentContainer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="visible" />
 
 </FrameLayout>

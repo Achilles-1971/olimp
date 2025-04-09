@@ -15,7 +15,7 @@ class CommentRepository(private val api: ApiService) {
         return api.getComments(entityType, entityId, page)
     }
 
-    suspend fun createComment(request: CommentRequest): Response<Comment> {
+    suspend fun createComment(request: CommentRequest): Response<List<Comment>> {
         return api.createComment(request)
     }
 

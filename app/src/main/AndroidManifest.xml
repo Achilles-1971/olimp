@@ -7,6 +7,13 @@
     <!-- Разрешение на интернет -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Разрешения для уведомлений (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Разрешения для osmdroid (кэширование тайлов) -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <!-- Разрешение на доступ к файлам (по новым стандартам Android 11+) -->
     <uses-permission
         android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
@@ -14,6 +21,10 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
+    <!-- Разрешения для доступа к местоположению -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:name=".MyApplication"
@@ -29,6 +40,15 @@
         android:enableOnBackInvokedCallback="true"
         android:resizeableActivity="true"
         tools:targetApi="31">
+
+        <!-- Сервис Firebase Cloud Messaging -->
+        <service
+            android:name=".MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <!-- Splash Screen -->
         <activity
@@ -85,25 +105,55 @@
         <activity
             android:name=".ui.SettingsActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+            android:theme="@style/Theme.Olimp"/>
 
         <!-- Мои мероприятия -->
         <activity
-            android:name=".ui.MyEventsActivity"
+            android:name=".ui.events.MyEventsActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+            android:theme="@style/Theme.Olimp" />
 
-        <!-- Создание мероприятия (добавлено) -->
+        <!-- Создание мероприятия -->
         <activity
             android:name=".ui.events.CreateEventActivity"
             android:exported="true"
             android:theme="@style/Theme.Olimp"/>
 
-        <!-- Детали мероприятия (если нужно отдельное Activity) -->
+        <!-- Объявление UCropActivity -->
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:exported="false" />
+
+        <!-- Детали мероприятия -->
         <activity
             android:name=".ui.events.EventDetailActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.Olimp"/>
+
+        <!-- Уведомления -->
+        <activity
+            android:name=".ui.notifications.NotificationsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Olimp"/>
+
+        <!-- Мои друзья -->
+        <activity
+            android:name=".ui.friends.FriendsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Olimp"/>
+
+        <!-- Найти друзей -->
+        <activity
+            android:name=".ui.friends.FindFriendsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Olimp"/>
+
+        <activity android:name=".ui.ProfileHostActivity" />
+        <activity android:name=".ui.messages.MessageActivity"
+            android:launchMode="singleTop" />
 
     </application>
 </manifest>

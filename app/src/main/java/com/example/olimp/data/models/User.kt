@@ -2,7 +2,6 @@ package com.example.olimp.data.models
 
 import com.google.gson.annotations.SerializedName
 
-
 data class UserResponse(
     val id: Int,
     val username: String,

@@ -1,12 +1,15 @@
 package com.example.olimp.ui.events
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.olimp.R
 import com.example.olimp.data.models.Event
 import com.example.olimp.data.models.EventPhotoResponse
 import com.example.olimp.data.repository.EventsRepository
@@ -23,6 +26,8 @@ class EventDetailFragment : Fragment() {
         EventsRepository(RetrofitInstance.getApi(requireContext()))
     }
 
+    private var eventId: Int = 0
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -31,106 +36,93 @@ class EventDetailFragment : Fragment() {
         return binding.root
     }
 
-    /**
-     * Настраиваем обработчики и загружаем данные мероприятия.
-     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val eventId = arguments?.getInt("eventId") ?: 0
+        eventId = arguments?.getInt("eventId") ?: 0
         if (eventId == 0) {
-            Toast.makeText(requireContext(), "Не передан идентификатор мероприятия", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), R.string.error_invalid_event_id, Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Загрузка деталей мероприятия
-        loadEventDetails(eventId)
-
-        // Кнопка "Участвовать" / "Отменить участие"
         binding.btnParticipate.setOnClickListener {
-            Toast.makeText(requireContext(), "Нажата кнопка для eventId=$eventId", Toast.LENGTH_SHORT).show()
-            // TODO: Реализуйте вызов репозитория для регистрации / отмены участия
-            // participateInEvent(eventId)
+            toggleParticipation()
         }
 
-        // Обработка нажатия на «Комментарии»
         binding.tvCommentsHeader.setOnClickListener {
             Toast.makeText(requireContext(), "Открыть/скрыть комментарии", Toast.LENGTH_SHORT).show()
-            // TODO: Логика отображения или перехода к списку комментариев
         }
+
+        loadEventDetails()
     }
 
-    /**
-     * Асинхронно загружаем данные мероприятия по eventId и обновляем UI.
-     */
-    private fun loadEventDetails(eventId: Int) {
+    private fun loadEventDetails() {
         lifecycleScope.launch {
-            val event: Event? = eventsRepository.getEventById(eventId)
-            if (event == null) {
-                Toast.makeText(requireContext(), "Ошибка загрузки мероприятия", Toast.LENGTH_SHORT).show()
-                return@launch
+            try {
+                val event = eventsRepository.getEventById(eventId)
+                if (event != null) {
+                    updateUI(event)
+                } else {
+                    Toast.makeText(requireContext(), R.string.error_loading_event_details, Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("EventDetailFragment", "Ошибка загрузки события: ${e.message}", e)
+                Toast.makeText(requireContext(), getString(R.string.error, e.message), Toast.LENGTH_SHORT).show()
             }
-
-            // Заполняем заголовок
-            binding.tvTitle.text = event.title
-
-            // Заполняем описание
-            binding.tvFullContent.text = event.description ?: "Описание отсутствует"
-
-            // Подзаголовок (адрес / время / др.)
-            if (!event.subheader.isNullOrEmpty()) {
-                binding.tvSubheader.text = event.subheader
-                binding.tvSubheader.visibility = View.VISIBLE
-            } else {
-                binding.tvSubheader.visibility = View.GONE
-            }
-
-            // Просмотры
-            binding.tvViews.text = "Просмотры: ${event.viewsCount ?: 0}"
-
-            // Участвует ли уже пользователь
-            if (event.isRegistered == true) {
-                binding.btnParticipate.text = "Отменить участие"
-            } else {
-                binding.btnParticipate.text = "Участвовать"
-            }
-
-            // Показываем фотографии (если есть)
-            setupViewPagerPhotos(event.photos)
         }
     }
 
-    /**
-     * Настраиваем ViewPager2 для фотографий, если они есть.
-     */
+    private fun updateUI(event: Event) {
+        binding.tvTitle.text = event.title
+        binding.tvFullContent.text = event.description ?: getString(R.string.no_description)
+        binding.tvSubheader.apply {
+            text = event.subheader ?: ""
+            visibility = if (event.subheader.isNullOrEmpty()) View.GONE else View.VISIBLE
+        }
+        binding.tvViews.text = getString(R.string.views_count, event.viewsCount ?: 0)
+
+        val registered = event.isRegistered == true
+        binding.btnParticipate.text = getString(
+            if (registered) R.string.cancel_participation_button else R.string.participate_button
+        )
+        binding.btnParticipate.backgroundTintList = ContextCompat.getColorStateList(
+            requireContext(), if (registered) R.color.gray else R.color.gold
+        )
+
+        setupViewPagerPhotos(event.photos)
+    }
+
+    private fun toggleParticipation() {
+        lifecycleScope.launch {
+            try {
+                binding.btnParticipate.isEnabled = false
+                val event = eventsRepository.getEventById(eventId)
+                if (event?.isRegistered == true) {
+                    eventsRepository.cancelParticipation(eventId)
+                    Toast.makeText(requireContext(), getString(R.string.cancelled_successfully), Toast.LENGTH_SHORT).show()
+                } else {
+                    eventsRepository.registerForEvent(eventId)
+                    Toast.makeText(requireContext(), getString(R.string.registered_successfully), Toast.LENGTH_SHORT).show()
+                }
+                loadEventDetails()
+            } catch (e: Exception) {
+                Log.e("EventDetailFragment", "Ошибка при участии: ${e.message}", e)
+                Toast.makeText(requireContext(), getString(R.string.error, e.message), Toast.LENGTH_SHORT).show()
+            } finally {
+                binding.btnParticipate.isEnabled = true
+            }
+        }
+    }
+
     private fun setupViewPagerPhotos(photos: List<EventPhotoResponse>?) {
         if (photos.isNullOrEmpty()) {
-            // Если нет фото, скрываем ViewPager и индикатор
             binding.viewPagerPhotos.visibility = View.GONE
             binding.indicator.visibility = View.GONE
-            return
-        }
-
-        // Показать ViewPager
-        binding.viewPagerPhotos.visibility = View.VISIBLE
-        binding.indicator.visibility = View.VISIBLE
-
-        // Создаём адаптер
-        val adapter = EventPhotoPagerAdapter(photos)
-        binding.viewPagerPhotos.adapter = adapter
-
-        // Подключаем индикатор к ViewPager
-        binding.indicator.setViewPager(binding.viewPagerPhotos)
-    }
-
-    /**
-     * Пример для регистрации (если нужно).
-     */
-    private fun participateInEvent(eventId: Int) {
-        lifecycleScope.launch {
-            // Пример вызова репозитория:
-            // val result = eventsRepository.registerForEvent(eventId)
-            // if (result.isSuccessful) { ... } else { ... }
+        } else {
+            binding.viewPagerPhotos.visibility = View.VISIBLE
+            binding.indicator.visibility = View.VISIBLE
+            binding.viewPagerPhotos.adapter = EventPhotoPagerAdapter(photos)
+            binding.indicator.setViewPager(binding.viewPagerPhotos)
         }
     }
 

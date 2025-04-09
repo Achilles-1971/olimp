@@ -10,6 +10,13 @@
         android:title="Профиль"
         app:showAsAction="ifRoom" />
 
+    <!-- Уведомления -->
+    <item
+        android:id="@+id/nav_notifications"
+        android:icon="@drawable/ic_notifications"
+        android:title="Уведомления"
+        app:showAsAction="ifRoom" />
+
     <!-- Настройки -->
     <item
         android:id="@+id/nav_settings"
@@ -23,6 +30,20 @@
         android:icon="@drawable/ic_events"
         android:title="Мои мероприятия"
         app:showAsAction="ifRoom" />
+
+    <!-- Мои друзья -->
+    <item
+        android:id="@+id/nav_friends"
+        android:icon="@drawable/ic_friends"
+    android:title="Мои друзья"
+    app:showAsAction="ifRoom" />
+
+    <!-- Найти друзей -->
+    <item
+        android:id="@+id/nav_find_friends"
+        android:icon="@drawable/ic_search_friends"
+    android:title="Найти друзей"
+    app:showAsAction="ifRoom" />
 
     <!-- Выйти из аккаунта -->
     <item

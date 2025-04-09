@@ -20,9 +20,10 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.olimp.R
 import com.example.olimp.data.models.FlatComment
 import com.example.olimp.data.models.Comment
-import java.text.SimpleDateFormat
-import java.util.*
 import kotlinx.coroutines.*
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 class FlatCommentAdapter(
     private var flatComments: MutableList<FlatComment>,
@@ -31,6 +32,7 @@ class FlatCommentAdapter(
 
     private val dateCache = mutableMapOf<String, String>()
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val adapterTag = "Adapter_${hashCode()}" // Уникальный тег для каждого экземпляра адаптера
 
     class FlatCommentViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val ivAvatar: ImageView = view.findViewById(R.id.ivAvatar)
@@ -62,7 +64,7 @@ class FlatCommentAdapter(
 
         Log.d(
             "FlatCommentAdapter",
-            "Binding comment at pos=$position: id=${comment.id}, depth=${flatComment.depth}, isPlaceholder=${flatComment.isPlaceholder}, isExpanded=${flatComment.isExpanded}"
+            "$adapterTag Binding comment at pos=$position: id=${comment.id}, depth=${flatComment.depth}, isPlaceholder=${flatComment.isPlaceholder}, isExpanded=${flatComment.isExpanded}"
         )
 
         if (flatComment.isPlaceholder) {
@@ -91,7 +93,7 @@ class FlatCommentAdapter(
                 holder.btnShowReplies.setCompoundDrawablesRelative(null, null, drawable, null)
             }
             holder.btnShowReplies.setOnClickListener {
-                Log.d("FlatCommentAdapter", "Clicked placeholder at pos=$position, action=${if (flatComment.isExpanded) "collapse" else "expand"}")
+                Log.d("FlatCommentAdapter", "$adapterTag Clicked placeholder at pos=$position, action=${if (flatComment.isExpanded) "collapse" else "expand"}")
                 onAction(flatComment, if (flatComment.isExpanded) "collapse" else "expand")
             }
             return
@@ -191,25 +193,26 @@ class FlatCommentAdapter(
 
         Log.d(
             "FlatCommentAdapter",
-            "Position $position: isAuthor=$isAuthor, currentUserId=$currentUserId, commentUserId=${comment.user?.id}"
+            "$adapterTag Position $position: isAuthor=$isAuthor, currentUserId=$currentUserId, commentUserId=${comment.user?.id}"
         )
     }
 
     override fun getItemCount(): Int {
-        Log.d("FlatCommentAdapter", "getItemCount: ${flatComments.size}")
-        return flatComments.size
+        val count = flatComments.size
+        Log.d("FlatCommentAdapter", "$adapterTag getItemCount: $count")
+        return count
     }
 
     fun getCurrentList(): MutableList<FlatComment> = flatComments
 
     fun updateData(newFlatComments: List<FlatComment>) {
-        Log.d("FlatCommentAdapter", "Updating data: old size=${flatComments.size}, new size=${newFlatComments.size}")
+        Log.d("FlatCommentAdapter", "$adapterTag Updating data: old size=${flatComments.size}, new size=${newFlatComments.size}, new comments=$newFlatComments")
         val diffCallback = FlatCommentDiffCallback(flatComments, newFlatComments)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
         val updatedList = mutableListOf<FlatComment>().apply { addAll(newFlatComments) }
         flatComments = updatedList
         diffResult.dispatchUpdatesTo(this)
-        Log.d("FlatCommentAdapter", "Data updated, new size=${flatComments.size}")
+        Log.d("FlatCommentAdapter", "$adapterTag Data updated, new size=${flatComments.size}")
     }
 
     fun replaceComment(updated: Comment) {
@@ -218,21 +221,20 @@ class FlatCommentAdapter(
             val updatedItem = flatComments[index].copy(comment = updated)
             flatComments[index] = updatedItem
             notifyItemChanged(index)
-            Log.d("FlatCommentAdapter", "🔄 Replaced comment at index=$index with id=${updated.id}")
+            Log.d("FlatCommentAdapter", "$adapterTag 🔄 Replaced comment at index=$index with id=${updated.id}")
         } else {
-            Log.w("FlatCommentAdapter", "⚠️ Comment to replace not found: id=${updated.id}")
+            Log.w("FlatCommentAdapter", "$adapterTag ⚠️ Comment to replace not found: id=${updated.id}")
         }
     }
 
     private fun formatDate(isoDate: String): String {
         return try {
-            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
-            isoFormat.timeZone = TimeZone.getTimeZone("UTC")
-            val date = isoFormat.parse(isoDate)
-            val outputFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
-            outputFormat.format(date ?: Date())
+            val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+            val dateTime = OffsetDateTime.parse(isoDate, formatter)
+            val outputFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm", Locale.getDefault())
+            dateTime.format(outputFormatter)
         } catch (e: Exception) {
-            Log.e("FlatCommentAdapter", "Date parsing error: $isoDate, ${e.message}")
+            Log.e("FlatCommentAdapter", "$adapterTag Date parsing error: $isoDate, ${e.message}")
             isoDate.replace("T", " ").substring(0, 19)
         }
     }
@@ -240,7 +242,7 @@ class FlatCommentAdapter(
     private fun getCurrentUserId(context: Context): Int? {
         val prefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         val userId = prefs.getInt("user_id", -1).takeIf { it != -1 }
-        Log.d("FlatCommentAdapter", "Current user ID: $userId")
+        Log.d("FlatCommentAdapter", "$adapterTag Current user ID: $userId")
         return userId
     }
 

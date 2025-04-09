@@ -1,64 +1,146 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/white">
 
-    <androidx.cardview.widget.CardView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="12dp"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="6dp"
-        app:cardBackgroundColor="@android:color/white">
+        android:orientation="vertical"
+        android:padding="16dp">
 
+        <!-- Изображение мероприятия -->
+        <ImageView
+            android:id="@+id/ivPreview"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/desc_events"
+            android:src="@drawable/ic_placeholder" />
+
+        <!-- Заголовок -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/no_description"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/black" />
+
+        <!-- Подзаголовок -->
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/no_description"
+            android:textSize="14sp"
+            android:textColor="@color/gray"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <!-- Контейнер для двух кругов прогресса -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:background="?android:attr/selectableItemBackground">
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:paddingHorizontal="16dp">
 
-            <ImageView
-                android:id="@+id/ivPreview"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_placeholder"
-                android:clipToOutline="true"
-                android:outlineProvider="background"
-                android:background="@drawable/rounded_image" />
-
-            <TextView
-                android:id="@+id/tvTitle"
-                android:layout_width="match_parent"
+            <!-- Прогресс участников -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Заголовок мероприятия"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="#212121"
-                android:maxLines="2"
-                android:ellipsize="end"
-                android:layout_marginTop="12dp" />
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
 
-            <TextView
-                android:id="@+id/tvSubtitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Подзаголовок или краткое описание"
-                android:textSize="14sp"
-                android:textColor="#757575"
-                android:maxLines="2"
-                android:ellipsize="end"
-                android:layout_marginTop="6dp" />
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
 
-            <TextView
-                android:id="@+id/tvParticipants"
-                android:layout_width="wrap_content"
+                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                        android:id="@+id/progressParticipants"
+                        style="@style/CustomProgressIndicator"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        app:indicatorSize="80dp"
+                        app:trackThickness="6dp"
+                        app:indicatorColor="@color/gold"
+                        app:trackColor="@color/gray_light"
+                        android:progress="0" />
+
+                    <TextView
+                        android:id="@+id/tvParticipantsCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:text="0 / 50"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black" />
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/participants_label"
+                    android:textSize="12sp"
+                    android:textColor="@color/gray" />
+            </LinearLayout>
+
+            <!-- Прогресс времени -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Участников: —"
-                android:textSize="14sp"
-                android:textColor="#616161"
-                android:drawablePadding="4dp"
-                android:layout_marginTop="8dp" />
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                        android:id="@+id/progressTime"
+                        style="@style/CustomProgressIndicator"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        app:indicatorSize="80dp"
+                        app:trackThickness="6dp"
+                        app:indicatorColor="@color/gold"
+                        app:trackColor="@color/gray_light"
+                        android:progress="0" />
+
+                    <TextView
+                        android:id="@+id/tvTimeLeft"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:text="2д 15ч"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black" />
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/time_left_label"
+                    android:textSize="12sp"
+                    android:textColor="@color/gray" />
+            </LinearLayout>
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
-</layout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
