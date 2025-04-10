@@ -45,40 +45,56 @@ object NotificationHelper {
                 val userId = senderId?.toIntOrNull()
                 if (userId == null || userId == 0) {
                     Log.e("NotificationHelper", "❌ Некорректный senderId: $senderId. Открываем MainActivity")
-                    Intent(context, MainActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
+                    Intent(context, MainActivity::class.java)
                 } else {
                     Log.d("NotificationHelper", "📨 Открываем MessageActivity с USER_ID=$userId")
                     Intent(context, MessageActivity::class.java).apply {
                         putExtra("USER_ID", userId)
-                        flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
                     }
                 }
             }
 
-            "event_comment", "event_comment_reply", "event_joined", "event_left", "event_submitted" -> {
+            "event_comment", "event_comment_reply", "event_joined", "event_left", "event_reminder" -> {
                 val parsedEventId = eventId?.toIntOrNull()
                 if (parsedEventId == null || parsedEventId == 0) {
                     Log.e("NotificationHelper", "❌ Некорректный eventId: $eventId. Открываем MainActivity")
-                    Intent(context, MainActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
+                    Intent(context, MainActivity::class.java)
                 } else {
                     Log.d("NotificationHelper", "📨 Открываем EventDetailActivity с EVENT_ID=$parsedEventId")
                     Intent(context, EventDetailActivity::class.java).apply {
                         putExtra("EVENT_ID", parsedEventId)
-                        flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                        // 💡 Можно передать коммент, если есть
+                        if (notifType == "event_comment_reply") {
+                            putExtra("SCROLL_TO_COMMENTS", true)
+                        }
                     }
                 }
             }
 
-            else -> {
-                Log.w("NotificationHelper", "⚠️ Неизвестный тип уведомления: $notifType. Открываем MainActivity")
-                Intent(context, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            "comment_liked" -> {
+                val parsedEventId = eventId?.toIntOrNull()
+                if (parsedEventId == null) {
+                    Log.e("NotificationHelper", "❌ comment_liked без eventId")
+                    Intent(context, MainActivity::class.java)
+                } else {
+                    Intent(context, EventDetailActivity::class.java).apply {
+                        putExtra("EVENT_ID", parsedEventId)
+                        putExtra("HIGHLIGHT_COMMENT", true)
+                    }
                 }
             }
+
+            "event_submitted", "event_approved", "event_rejected" -> {
+                Log.d("NotificationHelper", "📨 Открываем MyEventsActivity")
+                Intent(context, com.example.olimp.ui.events.MyEventsActivity::class.java)
+            }
+
+            else -> {
+                Log.w("NotificationHelper", "⚠️ Неизвестный тип уведомления: $notifType. Открываем MainActivity")
+                Intent(context, MainActivity::class.java)
+            }
+        }.apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
         }
 
         val requestCode = System.currentTimeMillis().toInt()

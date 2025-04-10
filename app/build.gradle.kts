@@ -54,7 +54,7 @@ dependencies {
     // Networking
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
-
+    implementation ("com.squareup.okhttp3:okhttp:4.12.0")
     // CircleIndicator
     implementation("me.relex:circleindicator:2.1.6")
 

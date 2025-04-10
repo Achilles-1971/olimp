@@ -35,15 +35,15 @@
     <item
         android:id="@+id/nav_friends"
         android:icon="@drawable/ic_friends"
-    android:title="Мои друзья"
-    app:showAsAction="ifRoom" />
+        android:title="Мои друзья"
+        app:showAsAction="ifRoom" />
 
     <!-- Найти друзей -->
     <item
         android:id="@+id/nav_find_friends"
         android:icon="@drawable/ic_search_friends"
-    android:title="Найти друзей"
-    app:showAsAction="ifRoom" />
+        android:title="Найти друзей"
+        app:showAsAction="ifRoom" />
 
     <!-- Выйти из аккаунта -->
     <item
@@ -51,4 +51,5 @@
         android:icon="@drawable/ic_logout"
         android:title="Выйти"
         app:showAsAction="ifRoom" />
+
 </menu>

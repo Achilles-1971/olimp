@@ -1,5 +1,6 @@
 package com.example.olimp.ui.messages.adapter
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,11 +9,11 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.olimp.R
-import com.example.olimp.data.models.ConversationResponse // Новый импорт
+import com.example.olimp.data.models.ConversationResponse
 import com.example.olimp.databinding.ItemConversationBinding
 
 class ConversationAdapter(
-    private val onItemClick: (ConversationResponse) -> Unit // Убрал префикс ApiService
+    private val onItemClick: (ConversationResponse) -> Unit
 ) : ListAdapter<ConversationResponse, ConversationAdapter.ConversationViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ConversationViewHolder {
@@ -27,7 +28,9 @@ class ConversationAdapter(
     inner class ConversationViewHolder(private val binding: ItemConversationBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(conversation: ConversationResponse) { // Убрал префикс ApiService
+        fun bind(conversation: ConversationResponse) {
+            Log.d("ConversationAdapter", "Binding conversation: userId=${conversation.user.id}, lastMessage=${conversation.lastMessage.content}, unreadCount=${conversation.unreadCount}")
+
             binding.tvUsername.text = conversation.user.username
             binding.tvLastMessage.text = conversation.lastMessage.content
 
@@ -55,13 +58,13 @@ class ConversationAdapter(
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<ConversationResponse>() { // Убрал префикс ApiService
+    class DiffCallback : DiffUtil.ItemCallback<ConversationResponse>() {
         override fun areItemsTheSame(oldItem: ConversationResponse, newItem: ConversationResponse): Boolean {
-            return oldItem.user.id == newItem.user.id
+            return oldItem.user.id == newItem.user.id // Уникальность по ID пользователя
         }
 
         override fun areContentsTheSame(oldItem: ConversationResponse, newItem: ConversationResponse): Boolean {
-            return oldItem == newItem
+            return oldItem == newItem // Полное сравнение содержимого
         }
     }
 }

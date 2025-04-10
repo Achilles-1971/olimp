@@ -9,12 +9,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.olimp.R
 import com.example.olimp.data.repository.AuthRepository
-import com.example.olimp.network.RetrofitInstance
 import kotlinx.coroutines.launch
 
 class ResetPasswordActivity : AppCompatActivity() {
 
-    private lateinit var resetCodeEditText: EditText
+    private lateinit var code1: EditText
+    private lateinit var code2: EditText
+    private lateinit var code3: EditText
+    private lateinit var code4: EditText
+    private lateinit var code5: EditText
+    private lateinit var code6: EditText
     private lateinit var newPasswordEditText: EditText
     private lateinit var confirmPasswordEditText: EditText
     private lateinit var resetPasswordButton: Button
@@ -37,7 +41,7 @@ class ResetPasswordActivity : AppCompatActivity() {
         authRepository = AuthRepository()
 
         resetPasswordButton.setOnClickListener {
-            val resetCode = resetCodeEditText.text.toString().trim()
+            val resetCode = getResetCode() // Собираем код из всех полей
             val newPassword = newPasswordEditText.text.toString().trim()
             val confirmPassword = confirmPasswordEditText.text.toString().trim()
 
@@ -55,10 +59,24 @@ class ResetPasswordActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        resetCodeEditText = findViewById(R.id.resetCodeEditText)
+        code1 = findViewById(R.id.code1)
+        code2 = findViewById(R.id.code2)
+        code3 = findViewById(R.id.code3)
+        code4 = findViewById(R.id.code4)
+        code5 = findViewById(R.id.code5)
+        code6 = findViewById(R.id.code6)
         newPasswordEditText = findViewById(R.id.newPasswordEditText)
         confirmPasswordEditText = findViewById(R.id.confirmPasswordEditText)
         resetPasswordButton = findViewById(R.id.resetPasswordButton)
+    }
+
+    private fun getResetCode(): String {
+        return code1.text.toString() +
+                code2.text.toString() +
+                code3.text.toString() +
+                code4.text.toString() +
+                code5.text.toString() +
+                code6.text.toString()
     }
 
     private fun confirmPasswordReset(email: String, resetCode: String, newPassword: String) {

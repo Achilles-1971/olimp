@@ -1,5 +1,6 @@
 package com.example.olimp.ui
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -14,8 +15,11 @@ class NewsPhotoPagerAdapter(private val photos: List<NewsPhoto>) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(photo: NewsPhoto) {
+            // Логируем URL для проверки
+            Log.d("GlideURL", "Loading URL: ${photo.photo}")
+
             Glide.with(binding.ivPhoto.context)
-                .load("http://10.0.2.2:8000${photo.photo}")
+                .load(photo.photo) // Используем photo.photo как есть, без добавления префикса
                 .placeholder(com.example.olimp.R.drawable.ic_news)
                 .into(binding.ivPhoto)
         }

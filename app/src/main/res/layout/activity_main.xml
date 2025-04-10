@@ -4,7 +4,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
-        <!-- Объект текущего пользователя -->
         <variable
             name="user"
             type="com.example.olimp.data.models.UserResponse" />
@@ -15,13 +14,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- Основной экран приложения -->
+        <!-- Основной контент -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@drawable/bg_gradient">
 
-            <!-- Верхняя панель с круглой аватаркой -->
+            <!-- Аватар -->
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/ivAvatar"
                 android:layout_width="64dp"
@@ -33,7 +32,7 @@
                 app:imageUrl="@{user.avatar}"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:shapeAppearanceOverlay="@style/CircleImageView"/>
+                app:shapeAppearanceOverlay="@style/CircleImageView" />
 
             <!-- Заголовок -->
             <TextView
@@ -51,7 +50,7 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintHorizontal_bias="0" />
 
-            <!-- Guideline для определения нижней границы верхней панели -->
+            <!-- Guideline -->
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guidelineTop"
                 android:layout_width="wrap_content"
@@ -70,7 +69,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
-            <!-- Нижняя панель навигации -->
+            <!-- Нижняя навигация -->
             <com.google.android.material.bottomnavigation.BottomNavigationView
                 android:id="@+id/bottomNav"
                 android:layout_width="0dp"
@@ -82,12 +81,12 @@
                 app:itemRippleColor="@null"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"/>
+                app:layout_constraintEnd_toEndOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <!-- Боковая панель (NavigationView) -->
+        <!-- Навигационная панель -->
         <com.google.android.material.navigation.NavigationView
-            android:id="@+id/nav_view"
+            android:id="@+id/navView"
             android:layout_width="280dp"
             android:layout_height="match_parent"
             android:layout_gravity="start"

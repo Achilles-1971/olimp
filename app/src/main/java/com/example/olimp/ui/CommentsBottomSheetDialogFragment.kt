@@ -509,25 +509,21 @@ class CommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun openUserProfile(userId: Int?) {
-        dismiss()
+        Log.d("CommentsBottomSheet", "openUserProfile called with userId=$userId")
+        dismiss() // Закрываем BottomSheet
         userId ?: run {
             Toast.makeText(requireContext(), "Нет данных пользователя", Toast.LENGTH_SHORT).show()
+            Log.w("CommentsBottomSheet", "userId is null")
             return
         }
         val sessionManager = SessionManager(requireContext())
         val currentUserId = sessionManager.getUserId()
+        Log.d("CommentsBottomSheet", "currentUserId=$currentUserId, targetUserId=$userId")
 
-        val fragment = if (userId == currentUserId) {
-            ProfileFragment()
-        } else {
-            OtherProfileFragment().apply {
-                arguments = Bundle().apply { putInt("userId", userId) }
-            }
-        }
-        activity?.supportFragmentManager?.beginTransaction()
-            ?.replace(R.id.fragmentContainer, fragment)
-            ?.addToBackStack(null)
-            ?.commit()
+        // Запускаем ProfileHostActivity с передачей userId
+        val intent = Intent(requireContext(), ProfileHostActivity::class.java)
+        intent.putExtra("userId", userId)
+        startActivity(intent)
     }
 
     private fun openEditDialog(flatComment: FlatComment, position: Int) {

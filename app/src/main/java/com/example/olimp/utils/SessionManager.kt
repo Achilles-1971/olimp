@@ -209,4 +209,6 @@ class SessionManager(context: Context) {
         Log.d("SessionManager", "🔥 Получен FCM-токен: '$token'")
         return token
     }
+
+
 }

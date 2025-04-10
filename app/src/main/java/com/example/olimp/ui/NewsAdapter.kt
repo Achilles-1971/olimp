@@ -29,7 +29,7 @@ class NewsAdapter : ListAdapter<News, NewsAdapter.NewsViewHolder>(NewsDiffCallba
             val context = holder.itemView.context
             val intent = Intent(context, NewsDetailActivity::class.java)
             intent.putExtra("NEWS_ID", newsItem.id)
-            intent.putExtra("NEWS_SUBHEADER", newsItem.subheader)  // Добавляем передачу подзаголовка
+            intent.putExtra("NEWS_SUBHEADER", newsItem.subheader)
             context.startActivity(intent)
         }
     }
@@ -38,17 +38,17 @@ class NewsAdapter : ListAdapter<News, NewsAdapter.NewsViewHolder>(NewsDiffCallba
 
         fun bind(item: News) {
             binding.tvTitle.text = item.title
-            binding.tvSubheader.text = item.subheader
+            binding.tvSubheader.text = item.subheader ?: ""
+            binding.tvViews.text = item.viewsCount.toString()
 
-            val baseUrl = "http://10.0.2.2:8000"
-            val mediaPath = "/media/"
-            val photoPath = item.photos?.firstOrNull()?.photo
-            if (!photoPath.isNullOrEmpty()) {
-                val fullUrl = if (photoPath.startsWith(mediaPath)) {
-                    baseUrl + photoPath
+            val photoUrl = item.photos?.firstOrNull()?.photo
+            if (!photoUrl.isNullOrEmpty()) {
+                val fullUrl = if (photoUrl.startsWith("http")) {
+                    photoUrl
                 } else {
-                    baseUrl + mediaPath + photoPath
+                    "http://10.0.2.2:8000$photoUrl"
                 }
+
                 Glide.with(binding.ivPhoto.context)
                     .load(fullUrl)
                     .placeholder(R.drawable.ic_news)
@@ -61,6 +61,6 @@ class NewsAdapter : ListAdapter<News, NewsAdapter.NewsViewHolder>(NewsDiffCallba
 }
 
 class NewsDiffCallback : DiffUtil.ItemCallback<News>() {
-    override fun areItemsTheSame(oldItem: News, newItem: News) = (oldItem.id == newItem.id)
-    override fun areContentsTheSame(oldItem: News, newItem: News) = (oldItem == newItem)
+    override fun areItemsTheSame(oldItem: News, newItem: News) = oldItem.id == newItem.id
+    override fun areContentsTheSame(oldItem: News, newItem: News) = oldItem == newItem
 }

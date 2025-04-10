@@ -268,4 +268,13 @@ interface ApiService {
 
     @GET("api/messages/conversations/")
     suspend fun listConversations(): Response<List<ConversationResponse>>
+
+    @Multipart
+    @PUT("api/users/{id}/")
+    suspend fun updateUserProfile(
+        @Path("id") userId: Int,
+        @PartMap fields: Map<String, @JvmSuppressWildcards okhttp3.RequestBody>,
+        @Part avatar: MultipartBody.Part? = null // Аватарка опциональна
+    ): Response<UserResponse>
+
 }

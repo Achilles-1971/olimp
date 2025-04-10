@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient"
+    android:padding="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <!-- Аватар -->
+        <FrameLayout
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginBottom="24dp">
+
+            <ImageView
+                android:id="@+id/ivEditAvatar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_user_avatar"
+                android:scaleType="centerCrop"
+                android:background="@drawable/bg_avatar_circle"
+                android:contentDescription="Аватар" />
+
+            <!-- Иконка редактирования -->
+            <ImageView
+                android:id="@+id/ivEditIcon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="4dp"
+                android:background="@drawable/bg_button_elevated"
+                android:padding="4dp"
+                android:src="@drawable/ic_edit"
+                android:contentDescription="Изменить аватар" />
+        </FrameLayout>
+
+        <!-- Имя пользователя -->
+        <EditText
+            android:id="@+id/etUsername"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Имя пользователя"
+            android:background="@drawable/bg_input_field"
+            android:padding="12dp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="12dp"
+            android:inputType="textPersonName" />
+
+        <!-- Описание -->
+        <EditText
+            android:id="@+id/etBio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="О себе"
+            android:background="@drawable/bg_input_field"
+            android:padding="12dp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="24dp"
+            android:inputType="textMultiLine"
+            android:minLines="3" />
+
+        <!-- Кнопка сохранить -->
+        <Button
+            android:id="@+id/btnSaveProfile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Сохранить"
+            android:background="@drawable/bg_button_elevated"
+            android:textColor="@color/black"
+            android:paddingHorizontal="32dp"
+            android:paddingVertical="12dp"
+            android:layout_gravity="center"/>
+    </LinearLayout>
+</ScrollView>

@@ -3,9 +3,8 @@ package com.example.olimp.ui.notifications
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -20,7 +19,8 @@ import com.example.olimp.network.ApiService
 import com.example.olimp.network.RetrofitInstance
 import com.example.olimp.ui.SettingsActivity
 import com.example.olimp.ui.events.EventDetailActivity
-import com.example.olimp.ui.messages.MessageActivity // Заменяем ChatActivity на MessageActivity
+import com.example.olimp.ui.events.MyEventsActivity
+import com.example.olimp.ui.messages.MessageActivity
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 
@@ -28,17 +28,16 @@ class NotificationsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityNotificationsBinding
     private lateinit var adapter: NotificationAdapter
-    private val handler = Handler(Looper.getMainLooper())
-    private val pollingInterval = 5000L
-
-    private val apiService: ApiService by lazy {
-        RetrofitInstance.getApi(this)
-    }
+    private val apiService: ApiService by lazy { RetrofitInstance.getApi(this) }
+    private val deletedNotificationIds = mutableSetOf<Int>() // Локально "удалённые" уведомления
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityNotificationsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Загружаем сохранённые удалённые ID
+        loadDeletedNotificationIds()
 
         setupRecyclerView()
         setupBackButton()
@@ -95,18 +94,25 @@ class NotificationsActivity : AppCompatActivity() {
                 val removedNotification = adapter.getItemAt(position)
                 adapter.removeItem(position)
                 Snackbar.make(binding.root, "Уведомление удалено", Snackbar.LENGTH_LONG)
-                    .setAction("ОТМЕНИТЬ") { adapter.restoreItem(removedNotification, position) }
+                    .setAction("ОТМЕНИТЬ") {
+                        adapter.restoreItem(removedNotification, position)
+                        deletedNotificationIds.remove(removedNotification.id)
+                        saveDeletedNotificationIds()
+                    }
                     .addCallback(object : Snackbar.Callback() {
                         override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                             if (event != DISMISS_EVENT_ACTION) {
+                                deletedNotificationIds.add(removedNotification.id)
+                                saveDeletedNotificationIds()
+                                // Опционально: удаление с сервера
                                 lifecycleScope.launch {
                                     try {
                                         val response = apiService.deleteNotification(removedNotification.id)
                                         if (!response.isSuccessful) {
-                                            Toast.makeText(this@NotificationsActivity, "Ошибка при удалении", Toast.LENGTH_SHORT).show()
+                                            Log.e("NotificationsActivity", "Ошибка удаления: ${response.code()}")
                                         }
                                     } catch (e: Exception) {
-                                        Toast.makeText(this@NotificationsActivity, "Ошибка сети: ${e.message}", Toast.LENGTH_SHORT).show()
+                                        Log.e("NotificationsActivity", "Ошибка сети: ${e.message}")
                                     }
                                 }
                             }
@@ -118,7 +124,7 @@ class NotificationsActivity : AppCompatActivity() {
     }
 
     private fun setupSwipeRefresh() {
-        binding.swipeRefreshLayout.setOnRefreshListener { checkNotificationSettings() }
+        binding.swipeRefreshLayout.setOnRefreshListener { loadNotifications() }
     }
 
     private fun setupBackButton() {
@@ -139,19 +145,25 @@ class NotificationsActivity : AppCompatActivity() {
                 binding.swipeRefreshLayout.isRefreshing = false
                 if (response.isSuccessful) {
                     val notifications = response.body().orEmpty()
+                        .filter { it.id !in deletedNotificationIds } // Фильтруем удалённые
+                    Log.d("NotificationsActivity", "Загружено уведомлений: ${notifications.size} (после фильтрации)")
+                    adapter.submitList(notifications.toList())
                     if (notifications.isNotEmpty()) {
-                        adapter.submitList(notifications)
                         binding.rvNotifications.visibility = View.VISIBLE
+                        Log.d("NotificationsActivity", "RecyclerView показан с ${notifications.size} элементами")
+                        binding.rvNotifications.post { binding.rvNotifications.scrollToPosition(0) }
                     } else {
                         binding.tvEmpty.visibility = View.VISIBLE
                         binding.tvEmpty.text = "У вас пока нет уведомлений"
                     }
                 } else {
+                    Log.e("NotificationsActivity", "Ошибка загрузки: ${response.code()} - ${response.errorBody()?.string()}")
                     Toast.makeText(this@NotificationsActivity, "Ошибка загрузки", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 binding.progressBar.visibility = View.GONE
                 binding.swipeRefreshLayout.isRefreshing = false
+                Log.e("NotificationsActivity", "Ошибка сети: ${e.message}", e)
                 Toast.makeText(this@NotificationsActivity, "Ошибка сети: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
@@ -160,46 +172,47 @@ class NotificationsActivity : AppCompatActivity() {
     private fun handleNotificationClick(notification: NotificationModel) {
         when (notification.type) {
             "new_message" -> {
-                val intent = Intent(this, MessageActivity::class.java).apply { // Заменяем ChatActivity
-                    putExtra("USER_ID", notification.entityId) // entityId — ID отправителя
+                val intent = Intent(this, MessageActivity::class.java).apply {
+                    putExtra("USER_ID", notification.entityId)
                 }
                 startActivity(intent)
             }
-            "event_comment", "event_comment_reply", "event_joined", "event_left", "event_submitted" -> {
+            "event_comment", "event_comment_reply", "event_joined", "event_left" -> {
                 val intent = Intent(this, EventDetailActivity::class.java).apply {
                     putExtra("EVENT_ID", notification.entityId)
                 }
                 startActivity(intent)
             }
-            else -> Toast.makeText(this, "Неизвестный тип уведомления", Toast.LENGTH_SHORT).show()
+            "event_submitted", "event_approved", "event_rejected" -> {
+                val intent = Intent(this, MyEventsActivity::class.java)
+                startActivity(intent)
+            }
+            else -> Toast.makeText(this, "Неизвестный тип уведомления: ${notification.type}", Toast.LENGTH_SHORT).show()
         }
     }
-
-    private val pollingRunnable = object : Runnable {
-        override fun run() {
-            loadNotifications()
-            handler.postDelayed(this, pollingInterval)
-        }
-    }
-
-    private fun startPolling() { handler.post(pollingRunnable) }
-    private fun stopPolling() { handler.removeCallbacks(pollingRunnable) }
 
     override fun onResume() {
         super.onResume()
         val sharedPref = getSharedPreferences("settings", Context.MODE_PRIVATE)
         val isEnabledInApp = sharedPref.getBoolean("notifications_enabled", true)
         val isEnabledInSystem = NotificationManagerCompat.from(this).areNotificationsEnabled()
-        if (isEnabledInApp && isEnabledInSystem) startPolling()
+        if (isEnabledInApp && isEnabledInSystem) loadNotifications() // Загрузка только при входе
     }
 
-    override fun onPause() {
-        super.onPause()
-        stopPolling()
+    // Сохранение удалённых ID в SharedPreferences
+    private fun saveDeletedNotificationIds() {
+        val sharedPref = getSharedPreferences("notifications", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putStringSet("deleted_ids", deletedNotificationIds.map { it.toString() }.toSet())
+            apply()
+        }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        stopPolling()
+    // Загрузка удалённых ID из SharedPreferences
+    private fun loadDeletedNotificationIds() {
+        val sharedPref = getSharedPreferences("notifications", Context.MODE_PRIVATE)
+        val savedIds = sharedPref.getStringSet("deleted_ids", emptySet()) ?: emptySet()
+        deletedNotificationIds.clear()
+        deletedNotificationIds.addAll(savedIds.mapNotNull { it.toIntOrNull() })
     }
 }

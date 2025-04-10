@@ -1,5 +1,6 @@
 package com.example.olimp.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -7,9 +8,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.olimp.R
 import com.example.olimp.data.repository.UserRepository
 import com.example.olimp.databinding.FragmentProfileBinding
 import com.example.olimp.network.RetrofitInstance
+import com.example.olimp.ui.profile.EditProfileFragment
 import kotlinx.coroutines.launch
 
 class ProfileFragment : Fragment() {
@@ -31,23 +34,38 @@ class ProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         userRepository = UserRepository(RetrofitInstance.getApi(requireContext()))
         loadUserProfile()
+
+        binding.btnSettings.setOnClickListener {
+            val intent = Intent(requireContext(), SettingsActivity::class.java)
+            startActivity(intent)
+        }
+
+        binding.btnEditProfile.setOnClickListener {
+            Log.d("ProfileFragment", "Переход на EditProfileFragment")
+            val editProfileFragment = EditProfileFragment()
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, editProfileFragment)
+                .addToBackStack(null)
+                .commit()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Перезагружаем профиль при возвращении на фрагмент
+        loadUserProfile()
     }
 
     private fun loadUserProfile() {
-        // Показываем прогресс-бар
         binding.progressBarProfile.visibility = View.VISIBLE
-
-        // Запускаем корутину во viewLifecycleOwner.lifecycleScope
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val userResponse = userRepository.getCurrentUser()
                 if (userResponse.isSuccessful) {
                     val user = userResponse.body()
                     Log.d("ProfileFragment", "Получен пользователь: $user")
-                    // Добавляем логирование поля avatar
                     Log.d("ProfileFragment", "Avatar получен: ${user?.avatar}")
                     if (user != null) {
-                        // Обновляем DataBinding только если _binding ещё существует
                         _binding?.user = user
                     } else {
                         context?.let {

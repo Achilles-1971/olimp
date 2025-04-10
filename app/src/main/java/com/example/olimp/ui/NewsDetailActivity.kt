@@ -3,6 +3,7 @@ package com.example.olimp.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.text.TextUtils
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -154,21 +155,36 @@ class NewsDetailActivity : AppCompatActivity(),
 
     private fun bindNews(news: News) {
         binding.tvTitle.text = news.title
-        binding.tvFullContent.text = news.fullText
 
+        val fullText = news.fullText ?: ""
         val subheader = intent.getStringExtra("NEWS_SUBHEADER")
+
         binding.tvSubheader.visibility = if (subheader.isNullOrEmpty()) View.GONE else View.VISIBLE
         binding.tvSubheader.text = subheader
 
-        binding.tvViews.text = "Просмотры: ${news.viewsCount}"
+        // Показываем просмотры
+        binding.tvViews.text = news.viewsCount.toString()
+
+        // Сохраняем и применяем лайк
         likeCount = news.likes
         isLiked = news.isLiked
-        binding.tvLikes.text = "Лайки: $likeCount"
-        updateLikeButton()
+        binding.tvLikes.text = likeCount.toString()
+        updateLikeButton() // Обновляем кнопку после isLiked!
 
         val photos = news.photos ?: emptyList()
         if (photos.isNotEmpty()) {
-            val adapter = NewsPhotoPagerAdapter(photos)
+            val normalizedPhotos = photos.map { photo ->
+                val originalUrl = photo.photo
+                val fullUrl = if (originalUrl.startsWith("http")) {
+                    originalUrl // Не добавляем префикс, если URL уже полный
+                } else if (originalUrl.startsWith("/")) {
+                    "http://10.0.2.2:8000$originalUrl" // Добавляем только если относительный путь с "/"
+                } else {
+                    "http://10.0.2.2:8000/media/news/$originalUrl" // Добавляем если просто имя файла
+                }
+                photo.copy(photo = fullUrl)
+            }
+            val adapter = NewsPhotoPagerAdapter(normalizedPhotos)
             binding.viewPagerPhotos.adapter = adapter
             binding.viewPagerPhotos.visibility = View.VISIBLE
             binding.indicator.setViewPager(binding.viewPagerPhotos)
@@ -177,7 +193,33 @@ class NewsDetailActivity : AppCompatActivity(),
             binding.viewPagerPhotos.visibility = View.GONE
             binding.indicator.visibility = View.GONE
         }
+
+
+        // --- Логика сворачивания текста ---
+        val isTextLong = fullText.length > 200
+        val maxLinesCollapsed = 4
+        var isExpanded = false
+
+        binding.tvFullContent.text = fullText
+        binding.tvFullContent.maxLines = if (isTextLong) maxLinesCollapsed else Int.MAX_VALUE
+        binding.tvFullContent.ellipsize = if (isTextLong) TextUtils.TruncateAt.END else null
+        binding.btnToggleContent.visibility = if (isTextLong) View.VISIBLE else View.GONE
+
+        binding.btnToggleContent.setOnClickListener {
+            isExpanded = !isExpanded
+            if (isExpanded) {
+                binding.tvFullContent.maxLines = Int.MAX_VALUE
+                binding.tvFullContent.ellipsize = null
+                binding.btnToggleContent.text = "Свернуть"
+            } else {
+                binding.tvFullContent.maxLines = maxLinesCollapsed
+                binding.tvFullContent.ellipsize = TextUtils.TruncateAt.END
+                binding.btnToggleContent.text = "Показать полностью"
+            }
+        }
     }
+
+
 
     private fun addLike() {
         if (!SessionManager(this).isUserLoggedIn()) {
@@ -265,30 +307,10 @@ class NewsDetailActivity : AppCompatActivity(),
             startActivity(Intent(this, LoginActivity::class.java))
             return
         }
-        lifecycleScope.launch {
-            try {
-                val response = withContext(Dispatchers.IO) { newsRepository.getUserById(targetUserId) }
-                if (response.isSuccessful) {
-                    val currentUserId = SessionManager(this@NewsDetailActivity).getUserId()
-                    val fragment = if (targetUserId == currentUserId) {
-                        ProfileFragment()
-                    } else {
-                        OtherProfileFragment().apply {
-                            arguments = Bundle().apply { putInt("userId", targetUserId) }
-                        }
-                    }
-                    supportFragmentManager.beginTransaction()
-                        .replace(R.id.fragmentContainer, fragment)
-                        .addToBackStack(null)
-                        .commit()
-                } else {
-                    handleApiError(response.code())
-                }
-            } catch (e: Exception) {
-                Log.e("NewsDetail", "Error loading profile: ${e.message}")
-                Toast.makeText(this@NewsDetailActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
+        Log.d("NewsDetailActivity", "goToProfile called with targetUserId=$targetUserId")
+        val intent = Intent(this, ProfileHostActivity::class.java)
+        intent.putExtra("userId", targetUserId)
+        startActivity(intent)
     }
 
     private fun toggleLike(flatComment: FlatComment) {

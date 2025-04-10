@@ -22,11 +22,13 @@ class NotificationAdapter(
         val newList = currentList.toMutableList()
         newList.removeAt(position)
         submitList(newList)
+        Log.d("NotificationAdapter", "Removed item at position $position, new size: ${newList.size}")
     }
     fun restoreItem(item: NotificationModel, position: Int) {
         val newList = currentList.toMutableList()
         newList.add(position, item)
         submitList(newList)
+        Log.d("NotificationAdapter", "Restored item at position $position, new size: ${newList.size}")
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NotificationViewHolder {
@@ -47,9 +49,10 @@ class NotificationAdapter(
             Log.d("NotificationAdapter", "Binding notification: ${notification.message}")
             binding.tvNotificationBody.text = notification.message
             binding.tvNotificationDate.text = formatDate(notification.createdAt)
+            Log.d("NotificationAdapter", "TextView updated: body=${binding.tvNotificationBody.text}, date=${binding.tvNotificationDate.text}")
 
             val iconRes = when (notification.type) {
-                "new_message" -> R.drawable.ic_send2 // Добавляем иконку для сообщений
+                "new_message" -> R.drawable.ic_send2
                 "event_comment" -> R.drawable.ic_messages
                 "event_comment_reply" -> R.drawable.ic_reply
                 "event_comment_like" -> R.drawable.ic_like
@@ -72,10 +75,9 @@ class NotificationAdapter(
 
         private fun formatDate(dateStr: String): String {
             return try {
-                // Обрезаем до миллисекунд (если есть больше 3 цифр после точки)
                 val correctedDateStr = dateStr.replace(Regex("\\.(\\d{3})\\d+"), ".$1")
                 val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault()).apply {
-                    timeZone = TimeZone.getTimeZone("UTC") // или TimeZone.getDefault() — по ситуации
+                    timeZone = TimeZone.getTimeZone("UTC")
                 }
                 val date = parser.parse(correctedDateStr)
                 val formatter = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())

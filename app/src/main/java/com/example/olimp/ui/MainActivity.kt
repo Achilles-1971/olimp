@@ -1,10 +1,14 @@
 package com.example.olimp.ui
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
@@ -22,18 +26,15 @@ import com.example.olimp.ui.events.EventsFragment
 import com.example.olimp.ui.events.MyEventsActivity
 import com.example.olimp.ui.friends.FindFriendsActivity
 import com.example.olimp.ui.friends.FriendsActivity
+import com.example.olimp.ui.messages.MessagesFragment
 import com.example.olimp.ui.notifications.NotificationsActivity
 import com.example.olimp.utils.SessionManager
+import com.example.olimp.utils.WebSocketManager
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.result.contract.ActivityResultContracts
-import com.example.olimp.ui.messages.MessagesFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -49,7 +50,6 @@ class MainActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         authRepository = AuthRepository()
 
-        // 🔔 Запрашиваем разрешение на уведомления (Android 13+)
         requestNotificationPermissionIfNeeded()
 
         Log.d("MainActivity", "🟢 MainActivity onCreate started")
@@ -59,13 +59,21 @@ class MainActivity : AppCompatActivity() {
                 Log.d("MainActivity", "🔴 User not logged in, redirecting to Login")
                 redirectToLogin()
             } else {
-                registerFcmTokenIfNeeded() // Проверяем и отправляем токен только если нужно
+                registerFcmTokenIfNeeded()
                 val email = sessionManager.getUserEmail()
                 if (email == null || !authRepository.isUserExists(email)) {
                     Log.d("MainActivity", "🔴 Email null or user not exists, clearing session")
                     sessionManager.clearSession()
                     redirectToLogin()
                 } else {
+                    WebSocketManager.init(this@MainActivity)
+                    sessionManager.getUserId()?.let { userId ->
+                        if (!WebSocketManager.isConnected()) { // Проверка состояния
+                            WebSocketManager.connect()
+                        } else {
+                            Log.d("MainActivity", "🟢 WebSocket already connected for user $userId")
+                        }
+                    }
                     initUI(savedInstanceState)
                     loadCurrentUserData()
                 }
@@ -79,7 +87,6 @@ class MainActivity : AppCompatActivity() {
                 val token = task.result
                 val savedToken = sessionManager.getFcmToken()
 
-                // Отправляем токен, если он новый или изменился
                 if (savedToken != token) {
                     Log.d("FCM_TOKEN", "Токен устройства: $token")
                     CoroutineScope(Dispatchers.IO).launch {
@@ -89,7 +96,7 @@ class MainActivity : AppCompatActivity() {
                             if (response.isSuccessful) {
                                 val message = response.body()?.message
                                 Log.d("FCM_TOKEN", "✅ Ответ сервера: $message")
-                                sessionManager.saveFcmToken(token) // Сохраняем токен
+                                sessionManager.saveFcmToken(token)
                             } else {
                                 Log.e("FCM_TOKEN", "❌ Ошибка отправки токена: ${response.code()} - ${response.errorBody()?.string()}")
                             }
@@ -228,6 +235,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.nav_logout -> {
                     sessionManager.clearSession()
+                    WebSocketManager.disconnect() // Явное отключение перед выходом
                     redirectToLogin()
                     Log.d("MainActivity", "🟢 Drawer: Logged out")
                 }
@@ -249,6 +257,14 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
         Log.d("MainActivity", "🟢 Redirected to LoginActivity")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (isFinishing) { // Отключаем только если активность завершается полностью
+            WebSocketManager.disconnect()
+        }
+        Log.d("MainActivity", "🟢 MainActivity onDestroy")
     }
 
     private val requestPermissionLauncher = registerForActivityResult(

@@ -40,4 +40,16 @@
     <style name="CustomProgressIndicator" parent="Widget.Material3.CircularProgressIndicator">
         <item name="android:animationDuration">500</item> <!-- Длительность анимации в миллисекундах -->
     </style>
+    <style name="CodeInputStyle">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_margin">4dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:background">@drawable/bg_code_input</item>
+        <item name="android:inputType">number</item>
+        <item name="android:maxLength">1</item>
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+
 </resources>

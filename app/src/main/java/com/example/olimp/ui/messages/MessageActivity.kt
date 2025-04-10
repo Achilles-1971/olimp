@@ -2,14 +2,12 @@ package com.example.olimp.ui.messages
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.olimp.data.models.MessageRequest
 import com.example.olimp.data.models.MessageResponse
+import com.example.olimp.data.models.UserResponse
 import com.example.olimp.data.repository.MessagesRepository
 import com.example.olimp.data.repository.UserRepository
 import com.example.olimp.databinding.ActivityMessageBinding
@@ -17,7 +15,12 @@ import com.example.olimp.network.RetrofitInstance
 import com.example.olimp.ui.messages.adapter.MessageAdapter
 import com.example.olimp.utils.ChatSession
 import com.example.olimp.utils.SessionManager
+import com.example.olimp.utils.WebSocketManager
 import kotlinx.coroutines.launch
+import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MessageActivity : AppCompatActivity() {
 
@@ -26,23 +29,29 @@ class MessageActivity : AppCompatActivity() {
     private lateinit var userRepository: UserRepository
     private lateinit var sessionManager: SessionManager
     private lateinit var adapter: MessageAdapter
+
     private var otherUserId: Int = 0
+    private val messageIds = mutableSetOf<Int>()
 
-    private val handler = Handler(Looper.getMainLooper())
-    private val pollingInterval = 5000L
-    private val pollingRunnable = object : Runnable {
-        override fun run() {
-            loadMessages()
-            handler.postDelayed(this, pollingInterval)
+    private val messageListener: (JSONObject) -> Unit = { messageJson ->
+        val messageData = messageJson.getJSONObject("message_data")
+        val message = parseMessageResponse(messageData)
+        if (message.toUser == otherUserId || message.fromUser.id == otherUserId) {
+            runOnUiThread {
+                if (message.fromUser.id == sessionManager.getUserId()) {
+                    adapter.replaceTemporaryMessage(message)
+                } else {
+                    if (messageIds.add(message.id)) {
+                        adapter.addMessage(message) {
+                            binding.rvChat.scrollToPosition(adapter.itemCount - 1)
+                        }
+                    }
+                }
+            }
+            if (message.toUser == sessionManager.getUserId() && message.readAt == null) {
+                markMessageAsRead(message)
+            }
         }
-    }
-
-    private fun startPolling() {
-        handler.post(pollingRunnable)
-    }
-
-    private fun stopPolling() {
-        handler.removeCallbacks(pollingRunnable)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,11 +65,11 @@ class MessageActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
 
         updateOtherUserId(intent)
-
         setupRecyclerView()
         setupInput()
         loadChatTitle()
         loadMessages()
+        WebSocketManager.addMessageListener(messageListener)
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -72,16 +81,15 @@ class MessageActivity : AppCompatActivity() {
             updateOtherUserId(intent)
             loadChatTitle()
             loadMessages()
-        } else {
-            Log.d("MessageActivity", "onNewIntent: тот же пользователь, ничего не делаем")
+            messageIds.clear()
+            adapter.submitList(emptyList())
         }
     }
 
     private fun updateOtherUserId(intent: Intent?) {
         val newUserId = intent?.getIntExtra("USER_ID", 0) ?: 0
-        Log.d("MessageActivity", "Received USER_ID: $newUserId")
         if (newUserId == 0) {
-            Log.e("MessageActivity", "otherUserId is 0, something went wrong with Intent")
+            Log.e("MessageActivity", "otherUserId is 0, что-то не так с Intent")
         } else if (newUserId != otherUserId) {
             otherUserId = newUserId
             ChatSession.currentChatUserId = otherUserId
@@ -91,17 +99,12 @@ class MessageActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         adapter = MessageAdapter(sessionManager.getUserId() ?: 0)
-        binding.rvChat.layoutManager = LinearLayoutManager(this).apply {
-            stackFromEnd = true
-        }
+        binding.rvChat.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         binding.rvChat.adapter = adapter
     }
 
     private fun setupInput() {
-        binding.btnBack.setOnClickListener {
-            finishWithResult()
-        }
-
+        binding.btnBack.setOnClickListener { finishWithResult() }
         binding.btnSend.setOnClickListener {
             val content = binding.etMessage.text.toString().trim()
             if (content.isNotEmpty()) {
@@ -120,72 +123,115 @@ class MessageActivity : AppCompatActivity() {
             try {
                 val response = userRepository.getUserById(otherUserId)
                 if (response.isSuccessful) {
-                    val user = response.body()
-                    binding.tvChatTitle.text = user?.username ?: "Чат с пользователем $otherUserId"
+                    binding.tvChatTitle.text = response.body()?.username ?: "Чат с пользователем $otherUserId"
                 } else {
                     Log.e("MessageActivity", "Ошибка загрузки имени: ${response.code()}")
                     binding.tvChatTitle.text = "Чат с пользователем $otherUserId"
                 }
             } catch (e: Exception) {
-                Log.e("MessageActivity", "Ошибка сети при загрузке имени: ${e.message}")
+                Log.e("MessageActivity", "Ошибка сети: ${e.message}")
                 binding.tvChatTitle.text = "Чат с пользователем $otherUserId"
             }
         }
     }
 
     private fun loadMessages() {
-        if (otherUserId == 0) {
-            Log.e("MessageActivity", "Cannot load messages: otherUserId is 0")
-            return
-        }
+        if (otherUserId == 0) return
         lifecycleScope.launch {
             try {
                 val currentUserId = sessionManager.getUserId() ?: return@launch
-                val response = messagesRepository.getMessagesBetween(currentUserId, otherUserId)
-                if (response.isSuccessful) {
-                    val messages = response.body()?.results.orEmpty()
-                        .sortedBy { it.sentAt }
+                val allMessages = mutableListOf<MessageResponse>()
+                var page = 1
+                var hasNext = true
 
-                    adapter.submitList(messages) {
-                        binding.rvChat.scrollToPosition(adapter.itemCount - 1)
+                while (hasNext) {
+                    val response = messagesRepository.getMessagesBetween(currentUserId, otherUserId, page)
+                    if (response.isSuccessful) {
+                        val paginatedResponse = response.body()
+                        val serverMessages = paginatedResponse?.results.orEmpty()
+                        allMessages.addAll(serverMessages)
+                        messageIds.addAll(serverMessages.map { it.id })
+                        hasNext = paginatedResponse?.next != null
+                        page++
+                        Log.d("MessageActivity", "Загружено ${serverMessages.size} сообщений со страницы ${page - 1}")
+                    } else {
+                        Log.e("MessageActivity", "Ошибка загрузки сообщений на странице $page: ${response.code()}")
+                        break
                     }
-
-                    markMessagesAsRead(messages)
-                } else {
-                    Log.e("MessageActivity", "Ошибка загрузки сообщений: ${response.code()}")
                 }
+
+                // Передаём полный список в адаптер
+                adapter.submitList(allMessages.toList()) {
+                    binding.rvChat.post {
+                        binding.rvChat.scrollToPosition(adapter.itemCount - 1)
+                        Log.d("MessageActivity", "Всего загружено ${adapter.itemCount} сообщений")
+                    }
+                }
+                markMessagesAsRead(allMessages)
             } catch (e: Exception) {
-                Log.e("MessageActivity", "Ошибка сети при загрузке сообщений: ${e.message}")
+                Log.e("MessageActivity", "Ошибка сети: ${e.message}")
             }
         }
     }
 
+    private fun parseMessageResponse(json: JSONObject): MessageResponse {
+        return MessageResponse(
+            id = json.getInt("id"),
+            fromUser = parseUserResponse(json.getJSONObject("sender")),
+            toUser = json.getInt("receiver"),
+            content = json.getString("content"),
+            sentAt = json.getString("timestamp"),
+            readAt = json.optString("read_at", null)
+        )
+    }
+
+    private fun parseUserResponse(json: JSONObject): UserResponse {
+        return UserResponse(
+            id = json.getInt("id"),
+            username = json.getString("username"),
+            email = json.optString("email", null),
+            avatar = json.optString("avatar", null),
+            isEmailConfirmed = json.optBoolean("is_email_confirmed", false),
+            role = json.optString("role", null),
+            bio = json.optString("bio", null),
+            created_at = json.optString("created_at", null),
+            updated_at = json.optString("updated_at", null)
+        )
+    }
+
     private fun sendMessage(content: String) {
-        if (otherUserId == 0) {
-            Log.e("MessageActivity", "Cannot send message: otherUserId is 0")
-            return
+        val success = WebSocketManager.sendMessage(content, otherUserId)
+        if (!success) {
+            Log.e("MessageActivity", "Не удалось отправить сообщение")
+        } else {
+            val currentUserId = sessionManager.getUserId() ?: return
+            val tempMessage = MessageResponse(
+                id = -1,
+                fromUser = UserResponse(
+                    currentUserId,
+                    sessionManager.getUserProfile()?.username ?: "Me",
+                    null, null, false, null, null, null, null
+                ),
+                toUser = otherUserId,
+                content = content,
+                sentAt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX", Locale.getDefault()).format(Date()),
+                readAt = null
+            )
+            adapter.addMessage(tempMessage) {
+                binding.rvChat.scrollToPosition(adapter.itemCount - 1)
+            }
         }
+    }
+
+    private fun markMessageAsRead(message: MessageResponse) {
         lifecycleScope.launch {
             try {
-                val request = MessageRequest(toUserId = otherUserId, content = content)
-                val response = messagesRepository.sendMessage(request)
-                if (response.isSuccessful) {
-                    val newMessage = response.body()
-                    if (newMessage != null) {
-                        val currentList = adapter.currentList.toMutableList()
-                        currentList.add(newMessage)
-                        val sortedList = currentList.sortedBy { it.sentAt }
-                        adapter.submitList(sortedList) {
-                            binding.rvChat.scrollToPosition(adapter.itemCount - 1)
-                        }
-
-                        setResult(RESULT_OK, Intent().putExtra("NEW_MESSAGE_SENT", true))
-                    }
-                } else {
-                    Log.e("MessageActivity", "Ошибка отправки сообщения: ${response.code()}")
+                val response = messagesRepository.markMessageRead(message.id)
+                if (!response.isSuccessful) {
+                    Log.e("MessageActivity", "Ошибка отметки прочитанным: ${response.code()}")
                 }
             } catch (e: Exception) {
-                Log.e("MessageActivity", "Ошибка сети при отправке: ${e.message}")
+                Log.e("MessageActivity", "Ошибка сети: ${e.message}")
             }
         }
     }
@@ -193,32 +239,13 @@ class MessageActivity : AppCompatActivity() {
     private fun markMessagesAsRead(messages: List<MessageResponse>) {
         lifecycleScope.launch {
             messages.filter { it.toUser == sessionManager.getUserId() && it.readAt == null }
-                .forEach { message ->
-                    try {
-                        val response = messagesRepository.markMessageRead(message.id)
-                        if (!response.isSuccessful) {
-                            Log.e("MessageActivity", "Ошибка отметки прочитанным: ${response.code()}")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("MessageActivity", "Ошибка сети: ${e.message}")
-                    }
-                }
+                .forEach { markMessageAsRead(it) }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        startPolling()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        stopPolling()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        stopPolling()
+        WebSocketManager.removeMessageListener(messageListener)
         ChatSession.currentChatUserId = null
     }
 
@@ -230,5 +257,4 @@ class MessageActivity : AppCompatActivity() {
     override fun finish() {
         finishWithResult()
     }
-
 }

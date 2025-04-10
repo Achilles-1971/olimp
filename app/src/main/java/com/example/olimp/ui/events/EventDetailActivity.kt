@@ -28,6 +28,7 @@ import com.example.olimp.ui.FlatCommentAdapter
 import com.example.olimp.ui.LoginActivity
 import com.example.olimp.ui.OtherProfileFragment
 import com.example.olimp.ui.ProfileFragment
+import com.example.olimp.ui.ProfileHostActivity
 import com.example.olimp.utils.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -312,6 +313,13 @@ class EventDetailActivity : AppCompatActivity(), CommentsBottomSheetDialogFragme
                         } ?: run {
                             binding.ivOrganizerAvatar.setImageResource(R.drawable.ic_profile)
                         }
+                        // Обновляем кликабельность аватарки и имени организатора
+                        binding.ivOrganizerAvatar.setOnClickListener {
+                            openUserProfile(org.id)
+                        }
+                        binding.tvOrganizerName.setOnClickListener {
+                            openUserProfile(org.id)
+                        }
                         binding.organizerLayout.setOnClickListener {
                             openUserProfile(org.id)
                         }
@@ -539,19 +547,11 @@ class EventDetailActivity : AppCompatActivity(), CommentsBottomSheetDialogFragme
         }
         val sessionManager = SessionManager(this)
         val currentUserId = sessionManager.getUserId()
+        Log.d("EventDetailActivity", "openUserProfile called with userId=$userId, currentUserId=$currentUserId")
 
-        val fragment = if (userId == currentUserId) {
-            ProfileFragment()
-        } else {
-            OtherProfileFragment().apply {
-                arguments = Bundle().apply { putInt("userId", userId) }
-            }
-        }
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, fragment)
-            .addToBackStack(null)
-            .commit()
-        binding.fragmentContainer.visibility = View.VISIBLE
+        val intent = Intent(this, ProfileHostActivity::class.java)
+        intent.putExtra("userId", userId)
+        startActivity(intent)
     }
 
     private fun handleApiError(code: Int) {

@@ -16,15 +16,16 @@ data class MessageResponse(
     @SerializedName("read_at") val readAt: String?
 )
 
-data class PaginatedMessagesResponse(
-    val count: Int,
-    val next: String?,
-    val previous: String?,
-    val results: List<MessageResponse>
-)
 
 data class ConversationResponse(
     val user: UserResponse,
     @SerializedName("last_message") val lastMessage: MessageResponse,
     @SerializedName("unread_count") val unreadCount: Int
+)
+
+data class PaginatedMessagesResponse(
+    val count: Int,
+    val next: String?,
+    val previous: String?,
+    val results: List<MessageResponse>
 )
